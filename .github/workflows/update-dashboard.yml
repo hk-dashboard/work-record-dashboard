@@ -1,157 +1,153 @@
-name: update dashboard
+name: Update Dashboard
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 21 * * *"
+    - cron: '0 21 * * *'
+
+permissions:
+  contents: write
 
 jobs:
-
-  build:
-
+  update-dashboard:
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: checkout
-      uses: actions/checkout@v4
-
-
-    - name: install packages
-      run: |
-        pip install pandas
-
-
-    - name: generate html
-      run: |
-
-        python << 'EOF'
-
-        import pandas as pd
-        import json
-
-        SPREADSHEET_ID = "1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo"
-
-        YEARS = range(2023, 2035)
-
-        dfs = []
-
-        for y in YEARS:
-
-            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={y}"
-
-            try:
-
-                df = pd.read_csv(url)
-
-                if len(df) > 0:
-
-                    df["sheet"] = str(y)
-
-                    dfs.append(df)
-
-                    print(f"loaded sheet {y}")
-
-            except:
-
-                print(f"skip {y}")
-
-
-        if len(dfs) == 0:
-
-            raise Exception("No sheet data found")
-
-
-        df = pd.concat(dfs, ignore_index=True)
-
-        df.columns = [c.strip() for c in df.columns]
-
-
-        columns = [
-
-            "PJ Name",
-            "Role",
-            "Category",
-            "Work File",
-            "Word Amount",
-            "Offered Date",
-            "Start Date",
-            "Completion Date"
-
-        ]
-
-        df = df[columns]
-
-
-        rows = []
-
-        for _, r in df.iterrows():
-
-            words = int(str(r["Word Amount"]).replace(",",""))
-
-            rows.append({
-
-                "pjName": r["PJ Name"],
-
-                "role": r["Role"],
-
-                "category": r["Category"],
-
-                "workFile": r["Work File"],
-
-                "words": words,
-
-                "offeredDate": r["Offered Date"],
-
-                "startDate": r["Start Date"],
-
-                "completionDate": r["Completion Date"],
-
-                "workFiles": [
-
-                    x.strip()
-
-                    for x in str(r["Work File"]).split("\n")
-
-                ]
-
-            })
-
-
-        with open("work_record_dashboard_v10.html") as f:
-
-            template = f.read()
-
-
-        html = template.replace(
-
-            "const rows = [];",
-
-            "const rows = " + json.dumps(rows, ensure_ascii=False) + ";"
-
-        )
-
-
-        with open("index.html", "w") as f:
-
-            f.write(html)
-
-
-        print(f"{len(rows)} rows written")
-
-
-        EOF
-
-
-    - name: commit
-      run: |
-
-        git config user.name github-actions
-
-        git config user.email actions@github.com
-
-        git add index.html
-
-        git commit -m "auto update dashboard" || echo "no changes"
-
-        git push
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install gspread google-auth google-auth-oauthlib google-auth-httplib2
+
+      - name: Create Google service account file
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$GOOGLE_SERVICE_ACCOUNT_JSON" > service_account.json
+
+      - name: Update dashboard from Google Sheets
+        run: |
+          python <<'PY'
+          import os
+          import re
+          import json
+          import gspread
+          from google.oauth2.service_account import Credentials
+
+          # ===== 設定 =====
+          SPREADSHEET_NAME = "Work Record"
+          OUTPUT_FILE = "work_record_dashboard_v10.html"
+          YEAR_SHEETS = [str(y) for y in range(2023, 2031)]  # 2023, 2024, 2025, 2026...
+          SCOPES = [
+              "https://www.googleapis.com/auth/spreadsheets.readonly",
+              "https://www.googleapis.com/auth/drive.readonly",
+          ]
+
+          # ===== 認証 =====
+          creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPES)
+          gc = gspread.authorize(creds)
+
+          sh = gc.open(SPREADSHEET_NAME)
+
+          def clean_int(value):
+              if value is None:
+                  return 0
+              s = str(value).strip()
+              if s == "":
+                  return 0
+              s = s.replace(",", "")
+              return int(float(s))
+
+          all_rows = []
+
+          for sheet_name in YEAR_SHEETS:
+              try:
+                  ws = sh.worksheet(sheet_name)
+              except gspread.exceptions.WorksheetNotFound:
+                  continue
+
+              values = ws.get_all_values()
+              if not values or len(values) < 2:
+                  continue
+
+              headers = values[0]
+              data_rows = values[1:]
+
+              for row in data_rows:
+                  record = dict(zip(headers, row + [""] * (len(headers) - len(row))))
+
+                  date = record.get("Date", "").strip()
+                  if not date:
+                      continue
+
+                  category = record.get("Category", "").strip()
+                  client = record.get("Client", "").strip()
+                  project = record.get("Project", "").strip()
+                  worktime = record.get("Work Time", "").strip()
+                  word_amount_raw = record.get("Word Amount", "").strip()
+                  note = record.get("Note", "").strip()
+
+                  try:
+                      word_amount = clean_int(word_amount_raw)
+                  except Exception:
+                      word_amount = 0
+
+                  all_rows.append({
+                      "date": date,
+                      "category": category,
+                      "client": client,
+                      "project": project,
+                      "work_time": worktime,
+                      "word_amount": word_amount,
+                      "note": note,
+                  })
+
+          # 日付降順っぽく並べたい場合の簡易ソート
+          # Date が YYYY-MM-DD 想定
+          def sort_key(x):
+              return x.get("date", "")
+
+          all_rows = sorted(all_rows, key=sort_key, reverse=True)
+
+          js_rows = json.dumps(all_rows, ensure_ascii=False, indent=2)
+
+          with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
+              html = f.read()
+
+          # rows = [...] を差し替え
+          new_html, count = re.subn(
+              r"rows\s*=\s*\[(?:.|\n|\r)*?\]",
+              f"rows = {js_rows}",
+              html,
+              count=1
+          )
+
+          if count == 0:
+              raise RuntimeError("Could not find rows = [] block in HTML file.")
+
+          with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+              f.write(new_html)
+
+          print(f"Updated {OUTPUT_FILE} with {len(all_rows)} rows.")
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work_record_dashboard_v10.html
+          git diff --cached --quiet || git commit -m "auto update dashboard"
+
+      - name: Push changes
+        run: |
+          git push origin HEAD:main
