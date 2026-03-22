@@ -27,6 +27,7 @@ jobs:
       - name: generate html
         run: |
           python << 'EOF'
+          import json
           import pandas as pd
 
           SHEET_URL = "https://docs.google.com/spreadsheets/d/1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo/edit?gid=1629472964#gid=1629472964"
@@ -45,36 +46,46 @@ jobs:
           df = pd.read_csv(csv_url)
           print("columns:", df.columns.tolist())
 
-          # 数値化
-          df["Word Amount"] = (
-              df["Word Amount"]
+          # 列名をColab版に合わせる
+          df = df.rename(columns={
+              "PJ Name": "pjName",
+              "Role": "role",
+              "Category": "category",
+              "Work File": "workFile",
+              "Word Amount": "words",
+              "Offered Date": "offeredDate",
+              "Start Date": "startDate",
+              "Completion Date": "completionDate",
+          })
+
+          # words を数値化
+          df["words"] = (
+              df["words"]
               .astype(str)
               .str.replace(",", "", regex=False)
               .str.strip()
           )
-          df["Word Amount"] = pd.to_numeric(df["Word Amount"], errors="coerce").fillna(0)
+          df["words"] = pd.to_numeric(df["words"], errors="coerce").fillna(0)
 
-          total_records = len(df)
-          total_words = df["Word Amount"].sum()
-          total_files = df["Work File"].fillna("").astype(str).str.count("\n").add(1).sum()
-          unique_projects = df["PJ Name"].nunique()
+          # workFiles 作成
+          df["workFiles"] = df["workFile"].fillna("").astype(str).apply(
+              lambda x: [f.strip() for f in x.split("\n") if f.strip()]
+          )
 
-          html = f"""
-          <html>
-          <body>
-          <h1>Work Record Dashboard</h1>
-          <p>Total records: {total_records}</p>
-          <p>Total words: {int(total_words):,}</p>
-          <p>Total files: {int(total_files)}</p>
-          <p>Unique projects: {unique_projects}</p>
-          </body>
-          </html>
-          """
+          rows_dashboard = df.to_dict(orient="records")
+
+          rows_json = json.dumps(rows_dashboard, ensure_ascii=False)
+          rows_json = rows_json.replace("\r\n", "\\n").replace("\n", "\\n").replace("\r", "\\n")
+
+          with open("work_record_dashboard_v10.html", "r", encoding="utf-8") as f:
+              template_html = f.read()
+
+          html = template_html.replace("const rows = [];", f"const rows = {rows_json};")
 
           with open("index.html", "w", encoding="utf-8") as f:
               f.write(html)
 
-          print("index.html generated")
+          print("index.html generated from template")
           EOF
 
       - name: commit
