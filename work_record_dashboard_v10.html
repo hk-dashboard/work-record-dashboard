@@ -3,145 +3,174 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 <title>Work Record Dashboard</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-:root {
-  --bg:#f8fafc;
-  --bg2:#eef4f8;
-  --panel:rgba(255,255,255,.97);
-  --line:#dbe4ee;
-  --text:#1f2937;
-  --muted:#667085;
-  --accent:#3b82f6;
-  --shadow:0 18px 40px rgba(15,23,42,.06);
-  --radius:24px;
+
+:root{
+--bg:#f8fafc;
+--bg2:#eef4f8;
+--panel:rgba(255,255,255,.97);
+--line:#dbe4ee;
+--text:#1f2937;
+--muted:#667085;
+--accent:#3b82f6;
+--shadow:0 18px 40px rgba(15,23,42,.06);
+--radius:24px;
 }
 
-* { box-sizing:border-box; }
+*{box-sizing:border-box;}
 
-html,body {
-  margin:0;
-  padding:0;
+body{
+margin:0;
+font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+color:var(--text);
+
+background:
+radial-gradient(circle at top left,rgba(59,130,246,.06),transparent 24%),
+linear-gradient(180deg,#fff 0%,var(--bg) 55%,var(--bg2) 100%);
 }
 
-body {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color:var(--text);
-  background:
-    radial-gradient(circle at top left, rgba(59,130,246,.06), transparent 24%),
-    linear-gradient(180deg, #ffffff 0%, var(--bg) 55%, var(--bg2) 100%);
+.container{
+width:min(1320px,calc(100% - 32px));
+margin:0 auto;
+padding:28px 0 56px;
 }
 
-.container {
-  width:min(1320px, calc(100% - 32px));
-  margin:0 auto;
-  padding:28px 0 56px;
+.surface{
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:28px;
+box-shadow:var(--shadow);
 }
 
-.surface {
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:28px;
-  box-shadow:var(--shadow);
+.hero{
+position:sticky;
+top:0;
+z-index:20;
+padding:4px 0 18px;
+
+background:
+linear-gradient(
+180deg,
+rgba(248,250,252,.96),
+rgba(248,250,252,.78) 80%,
+rgba(248,250,252,0)
+);
 }
 
-.hero {
-  position:sticky;
-  top:0;
-  z-index:20;
-  padding:4px 0 18px;
-  backdrop-filter:blur(14px);
-  background:linear-gradient(
-    180deg,
-    rgba(248,250,252,.96),
-    rgba(248,250,252,.78) 80%,
-    rgba(248,250,252,0)
-  );
+.hero-card{
+padding:22px 24px;
 }
 
-.hero-card {
-  padding:22px 24px;
+h1{
+margin:0;
+font-size:clamp(1.75rem,2.5vw,2.55rem);
+letter-spacing:-.03em;
 }
 
-h1 {
-  margin:0;
-  font-size:clamp(1.75rem,2.5vw,2.55rem);
-  letter-spacing:-.03em;
+.section{
+margin-top:20px;
 }
 
-.section {
-  margin-top:20px;
+.grid{
+display:grid;
+gap:18px;
 }
 
-.grid {
-  display:grid;
-  gap:18px;
+.kpis{
+grid-template-columns:repeat(4,minmax(0,1fr));
 }
 
-.kpis {
-  grid-template-columns:repeat(4,minmax(0,1fr));
+.kpi{
+padding:22px;
+min-height:126px;
 }
 
-.kpi {
-  padding:22px;
-  min-height:126px;
+.kpi-label{
+color:var(--muted);
+text-transform:uppercase;
+letter-spacing:.09em;
+font-size:.72rem;
+font-weight:800;
 }
 
-.kpi-label {
-  color:var(--muted);
-  text-transform:uppercase;
-  letter-spacing:.09em;
-  font-size:.72rem;
-  font-weight:800;
+.kpi-value{
+font-size:clamp(1.85rem,3vw,2.35rem);
+font-weight:800;
+margin-top:10px;
 }
 
-.kpi-value {
-  font-size:clamp(1.85rem,3vw,2.35rem);
-  font-weight:800;
-  margin-top:10px;
+.kpi-sub{
+color:var(--muted);
+font-size:.92rem;
+margin-top:4px;
 }
 
-.kpi-sub {
-  color:var(--muted);
-  font-size:.92rem;
-  margin-top:4px;
+.two-up{
+grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
 }
 
-.two-up {
-  grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
+.panel{
+padding:22px;
 }
 
-.panel {
-  padding:22px;
+.year-select-wrap{
+display:flex;
+align-items:center;
+gap:12px;
+margin-top:16px;
 }
 
-.year-select-wrap {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:16px;
+.year-select{
+appearance:none;
+background:#fff;
+border:1px solid #d6deeb;
+border-radius:12px;
+padding:10px 14px;
+font-weight:600;
 }
 
-.year-select {
-  appearance:none;
-  background:#fff;
-  border:1px solid #d6deeb;
-  color:#0f172a;
-  border-radius:12px;
-  padding:10px 38px 10px 14px;
-  font-weight:600;
+.projects-table{
+width:100%;
+border-collapse:collapse;
+font-size:.9rem;
 }
 
-@media (max-width:780px) {
-  .kpis {
-    grid-template-columns:1fr;
-  }
-
-  .two-up {
-    grid-template-columns:1fr;
-  }
+.projects-table th{
+text-align:left;
+font-size:.75rem;
+letter-spacing:.06em;
+text-transform:uppercase;
+color:var(--muted);
+padding-bottom:8px;
 }
+
+.projects-table td{
+padding:6px 0;
+border-top:1px solid #eef2f7;
+}
+
+canvas{
+width:100%!important;
+height:260px!important;
+}
+
+@media(max-width:780px){
+
+.kpis{
+grid-template-columns:1fr;
+}
+
+.two-up{
+grid-template-columns:1fr;
+}
+
+}
+
 </style>
 
 </head>
@@ -156,140 +185,260 @@ h1 {
 <h1>Work Record Dashboard</h1>
 
 <div class="year-select-wrap">
-<label for="yearSelect">Year</label>
+
+<label>Year</label>
+
 <select id="yearSelect" class="year-select"></select>
+
 </div>
 
 </div>
 </div>
 
-<section class="section grid kpis" id="kpiGrid"></section>
+
+<section class="section grid kpis">
+
+<div class="surface kpi">
+<div class="kpi-label">TOTAL RECORDS</div>
+<div class="kpi-value" id="kpiRecords">0</div>
+<div class="kpi-sub" id="kpiProjects"></div>
+</div>
+
+<div class="surface kpi">
+<div class="kpi-label">TOTAL WORDS</div>
+<div class="kpi-value" id="kpiWords">0</div>
+</div>
+
+<div class="surface kpi">
+<div class="kpi-label">MONTHLY AVG WORDS</div>
+<div class="kpi-value" id="kpiMonthly">0</div>
+</div>
+
+<div class="surface kpi">
+<div class="kpi-label">TOTAL FILES</div>
+<div class="kpi-value" id="kpiFiles">0</div>
+</div>
+
+</section>
+
 
 <section class="section grid two-up">
 
 <div class="surface panel">
+
 <h2>Yearly Volume</h2>
-<div id="volumeChart"></div>
+
+<canvas id="yearChart"></canvas>
+
 </div>
 
+
 <div class="surface panel">
+
 <h2>Category Breakdown</h2>
-<div id="categoryBreakdown"></div>
+
+<canvas id="catChart"></canvas>
+
 </div>
 
 </section>
+
+
 
 <section class="section surface panel">
 
 <h2>Projects</h2>
 
-<div id="projects"></div>
+<table class="projects-table">
+
+<thead>
+
+<tr>
+<th>Date</th>
+<th>Project</th>
+<th>Category</th>
+<th>Words</th>
+</tr>
+
+</thead>
+
+<tbody id="projectRows"></tbody>
+
+</table>
 
 </section>
 
 </div>
 
+
+
 <script>
 
-/////////////////////////////////////////////////////////
-// GitHub Actions がここを書き換えます
-/////////////////////////////////////////////////////////
+////////////////////////////////////////////
+// GitHub Actions がここを書き換える
+////////////////////////////////////////////
 
 const rows = [];
 
-/////////////////////////////////////////////////////////
-// dashboard logic
-/////////////////////////////////////////////////////////
+////////////////////////////////////////////
 
-function groupBy(arr,key){
-  return arr.reduce((acc,item)=>{
-    const val=item[key];
-    (acc[val]=acc[val]||[]).push(item);
-    return acc;
-  },{});
-}
 
-function getYears(data){
-  const years=[...new Set(data.map(r=>r.sortDate?.slice(0,4)))];
-  return years.sort();
-}
+function parseYear(date){
 
-function filterYear(data,year){
-  if(year==="All") return data;
-  return data.filter(r=>r.sortDate?.startsWith(year));
-}
-
-function renderYearSelector(data){
-
-  const years=getYears(data);
-
-  const select=document.getElementById("yearSelect");
-
-  select.innerHTML="";
-
-  ["All",...years].forEach(y=>{
-    const opt=document.createElement("option");
-    opt.value=y;
-    opt.textContent=y;
-    select.appendChild(opt);
-  });
-
-  select.addEventListener("change",()=>{
-    renderDashboard(select.value);
-  });
+return date.split("/")[0];
 
 }
 
-function sumWords(data){
-  return data.reduce((sum,r)=>sum+(Number(r.words)||0),0);
+
+function updateDashboard(data){
+
+document.getElementById("kpiRecords").textContent=data.length;
+
+const totalWords=data.reduce((a,b)=>a+b.words,0);
+
+document.getElementById("kpiWords").textContent=totalWords.toLocaleString();
+
+document.getElementById("kpiMonthly").textContent=Math.round(totalWords/12).toLocaleString();
+
+const totalFiles=data.reduce((a,b)=>a+b.workFiles.length,0);
+
+document.getElementById("kpiFiles").textContent=totalFiles;
+
+const uniqueProjects=new Set(data.map(x=>x.pjName));
+
+document.getElementById("kpiProjects").textContent=uniqueProjects.size+" unique projects";
+
+const yearly={};
+
+data.forEach(r=>{
+
+const y=parseYear(r.completionDate);
+
+yearly[y]=(yearly[y]||0)+r.words;
+
+});
+
+new Chart(
+
+document.getElementById("yearChart"),
+
+{
+
+type:"bar",
+
+data:{
+
+labels:Object.keys(yearly),
+
+datasets:[{
+
+data:Object.values(yearly)
+
+}]
+
 }
 
-function renderKPIs(data){
+}
 
-  const container=document.getElementById("kpiGrid");
+);
 
-  const totalWords=sumWords(data);
 
-  const projects=new Set(data.map(r=>r.pjName));
+const cats={};
 
-  container.innerHTML=`
+data.forEach(r=>{
 
-<div class="surface kpi">
-<div class="kpi-label">TOTAL RECORDS</div>
-<div class="kpi-value">${data.length}</div>
-<div class="kpi-sub">${projects.size} unique projects</div>
-</div>
+cats[r.category]=(cats[r.category]||0)+r.words;
 
-<div class="surface kpi">
-<div class="kpi-label">TOTAL WORDS</div>
-<div class="kpi-value">${totalWords.toLocaleString()}</div>
-</div>
+});
 
-<div class="surface kpi">
-<div class="kpi-label">MONTHLY AVG WORDS</div>
-<div class="kpi-value">${Math.round(totalWords/12).toLocaleString()}</div>
-</div>
+new Chart(
 
-<div class="surface kpi">
-<div class="kpi-label">TOTAL FILES</div>
-<div class="kpi-value">${data.reduce((sum,r)=>sum+(r.workFiles?.length||1),0)}</div>
-</div>
+document.getElementById("catChart"),
+
+{
+
+type:"doughnut",
+
+data:{
+
+labels:Object.keys(cats),
+
+datasets:[{
+
+data:Object.values(cats)
+
+}]
+
+}
+
+}
+
+);
+
+
+const tbody=document.getElementById("projectRows");
+
+tbody.innerHTML="";
+
+data
+
+.sort((a,b)=>b.completionDate.localeCompare(a.completionDate))
+
+.forEach(r=>{
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>${r.completionDate}</td>
+
+<td>${r.pjName}</td>
+
+<td>${r.category}</td>
+
+<td>${r.words.toLocaleString()}</td>
+
+</tr>
 
 `;
 
-}
-
-function renderDashboard(year){
-
-  const filtered=filterYear(rows,year);
-
-  renderKPIs(filtered);
+});
 
 }
 
-renderYearSelector(rows);
 
-renderDashboard("All");
+const years=["All",...new Set(rows.map(r=>parseYear(r.completionDate)))];
+
+const sel=document.getElementById("yearSelect");
+
+years.forEach(y=>{
+
+const o=document.createElement("option");
+
+o.value=y;
+
+o.textContent=y;
+
+sel.appendChild(o);
+
+});
+
+sel.addEventListener("change",()=>{
+
+if(sel.value==="All"){
+
+updateDashboard(rows);
+
+}else{
+
+updateDashboard(rows.filter(r=>parseYear(r.completionDate)===sel.value));
+
+}
+
+});
+
+
+updateDashboard(rows);
 
 </script>
 
