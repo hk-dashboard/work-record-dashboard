@@ -1,0 +1,63 @@
+name: update dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 20 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: install packages
+        run: pip install pandas requests
+
+      - name: generate html
+        run: |
+          python << 'EOF'
+          import requests
+          import pandas as pd
+
+          SHEET_URL = "https://docs.google.com/spreadsheets/d/1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo/edit?gid=1629472964#gid=1629472964"
+
+          csv_url = SHEET_URL.replace("/edit#gid=", "/export?format=csv&gid=")
+
+          df = pd.read_csv(csv_url)
+
+          total_records = len(df)
+          total_words = df["Word Amount"].sum()
+          total_files = df["Work File"].str.count("\n").add(1).sum()
+          unique_projects = df["PJ Name"].nunique()
+
+          html = f"""
+          <html>
+          <body>
+          <h1>Work Record Dashboard</h1>
+          <p>Total records: {total_records}</p>
+          <p>Total words: {int(total_words):,}</p>
+          <p>Total files: {total_files}</p>
+          <p>Unique projects: {unique_projects}</p>
+          </body>
+          </html>
+          """
+
+          with open("index.html", "w", encoding="utf-8") as f:
+              f.write(html)
+          EOF
+
+      - name: commit
+        run: |
+          git config user.name github-actions
+          git config user.email actions@github.com
+          git add index.html
+          git commit -m "auto update dashboard" || echo "no changes"
+          git push
