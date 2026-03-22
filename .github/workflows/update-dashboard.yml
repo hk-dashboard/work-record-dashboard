@@ -29,7 +29,10 @@ jobs:
 
           SHEET_URL = "https://docs.google.com/spreadsheets/d/1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo/edit?gid=1629472964#gid=1629472964"
 
-          csv_url = SHEET_URL.replace("/edit#gid=", "/export?format=csv&gid=")
+          sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
+          gid = SHEET_URL.split("gid=")[1].split("&")[0] if "gid=" in SHEET_URL else "0"
+          gid = SHEET_URL.split("gid=")[1].split("&")[0] if "gid=" in SHEET_URL else "0"
+          print(csv_url)
 
           df = pd.read_csv(csv_url)
 
