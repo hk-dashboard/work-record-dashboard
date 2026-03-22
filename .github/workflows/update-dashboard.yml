@@ -31,7 +31,8 @@ jobs:
 
           sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
           gid = SHEET_URL.split("gid=")[1].split("&")[0] if "gid=" in SHEET_URL else "0"
-          gid = SHEET_URL.split("gid=")[1].split("&")[0] if "gid=" in SHEET_URL else "0"
+          csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+          
           print(csv_url)
 
           df = pd.read_csv(csv_url)
