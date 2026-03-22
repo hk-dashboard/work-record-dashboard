@@ -3,145 +3,174 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 <title>Work Record Dashboard</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-:root {
-  --bg:#f8fafc;
-  --bg2:#eef4f8;
-  --panel:rgba(255,255,255,.97);
-  --line:#dbe4ee;
-  --text:#1f2937;
-  --muted:#667085;
-  --accent:#3b82f6;
-  --shadow:0 18px 40px rgba(15,23,42,.06);
-  --radius:24px;
+
+:root{
+--bg:#f8fafc;
+--bg2:#eef4f8;
+--panel:rgba(255,255,255,.97);
+--line:#dbe4ee;
+--text:#1f2937;
+--muted:#667085;
+--accent:#3b82f6;
+--shadow:0 18px 40px rgba(15,23,42,.06);
+--radius:24px;
 }
 
-* { box-sizing:border-box; }
+*{box-sizing:border-box;}
 
-html,body {
-  margin:0;
-  padding:0;
+body{
+margin:0;
+font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+color:var(--text);
+
+background:
+radial-gradient(circle at top left,rgba(59,130,246,.06),transparent 24%),
+linear-gradient(180deg,#fff 0%,var(--bg) 55%,var(--bg2) 100%);
 }
 
-body {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color:var(--text);
-  background:
-    radial-gradient(circle at top left, rgba(59,130,246,.06), transparent 24%),
-    linear-gradient(180deg, #ffffff 0%, var(--bg) 55%, var(--bg2) 100%);
+.container{
+width:min(1320px,calc(100% - 32px));
+margin:0 auto;
+padding:28px 0 56px;
 }
 
-.container {
-  width:min(1320px, calc(100% - 32px));
-  margin:0 auto;
-  padding:28px 0 56px;
+.surface{
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:28px;
+box-shadow:var(--shadow);
 }
 
-.surface {
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:28px;
-  box-shadow:var(--shadow);
+.hero{
+position:sticky;
+top:0;
+z-index:20;
+padding:4px 0 18px;
+
+background:
+linear-gradient(
+180deg,
+rgba(248,250,252,.96),
+rgba(248,250,252,.78) 80%,
+rgba(248,250,252,0)
+);
 }
 
-.hero {
-  position:sticky;
-  top:0;
-  z-index:20;
-  padding:4px 0 18px;
-  backdrop-filter:blur(14px);
-  background:linear-gradient(
-    180deg,
-    rgba(248,250,252,.96),
-    rgba(248,250,252,.78) 80%,
-    rgba(248,250,252,0)
-  );
+.hero-card{
+padding:22px 24px;
 }
 
-.hero-card {
-  padding:22px 24px;
+h1{
+margin:0;
+font-size:clamp(1.75rem,2.5vw,2.55rem);
+letter-spacing:-.03em;
 }
 
-h1 {
-  margin:0;
-  font-size:clamp(1.75rem,2.5vw,2.55rem);
-  letter-spacing:-.03em;
+.section{
+margin-top:20px;
 }
 
-.section {
-  margin-top:20px;
+.grid{
+display:grid;
+gap:18px;
 }
 
-.grid {
-  display:grid;
-  gap:18px;
+.kpis{
+grid-template-columns:repeat(4,minmax(0,1fr));
 }
 
-.kpis {
-  grid-template-columns:repeat(4,minmax(0,1fr));
+.kpi{
+padding:22px;
+min-height:126px;
 }
 
-.kpi {
-  padding:22px;
-  min-height:126px;
+.kpi-label{
+color:var(--muted);
+text-transform:uppercase;
+letter-spacing:.09em;
+font-size:.72rem;
+font-weight:800;
 }
 
-.kpi-label {
-  color:var(--muted);
-  text-transform:uppercase;
-  letter-spacing:.09em;
-  font-size:.72rem;
-  font-weight:800;
+.kpi-value{
+font-size:clamp(1.85rem,3vw,2.35rem);
+font-weight:800;
+margin-top:10px;
 }
 
-.kpi-value {
-  font-size:clamp(1.85rem,3vw,2.35rem);
-  font-weight:800;
-  margin-top:10px;
+.kpi-sub{
+color:var(--muted);
+font-size:.92rem;
+margin-top:4px;
 }
 
-.kpi-sub {
-  color:var(--muted);
-  font-size:.92rem;
-  margin-top:4px;
+.two-up{
+grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
 }
 
-.two-up {
-  grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);
+.panel{
+padding:22px;
 }
 
-.panel {
-  padding:22px;
+.year-select-wrap{
+display:flex;
+align-items:center;
+gap:12px;
+margin-top:16px;
 }
 
-.year-select-wrap {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:16px;
+.year-select{
+appearance:none;
+background:#fff;
+border:1px solid #d6deeb;
+border-radius:12px;
+padding:10px 14px;
+font-weight:600;
 }
 
-.year-select {
-  appearance:none;
-  background:#fff;
-  border:1px solid #d6deeb;
-  color:#0f172a;
-  border-radius:12px;
-  padding:10px 38px 10px 14px;
-  font-weight:600;
+.projects-table{
+width:100%;
+border-collapse:collapse;
+font-size:.9rem;
 }
 
-@media (max-width:780px) {
-  .kpis {
-    grid-template-columns:1fr;
-  }
-
-  .two-up {
-    grid-template-columns:1fr;
-  }
+.projects-table th{
+text-align:left;
+font-size:.75rem;
+letter-spacing:.06em;
+text-transform:uppercase;
+color:var(--muted);
+padding-bottom:8px;
 }
+
+.projects-table td{
+padding:6px 0;
+border-top:1px solid #eef2f7;
+}
+
+canvas{
+width:100%!important;
+height:260px!important;
+}
+
+@media(max-width:780px){
+
+.kpis{
+grid-template-columns:1fr;
+}
+
+.two-up{
+grid-template-columns:1fr;
+}
+
+}
+
 </style>
 
 </head>
@@ -156,140 +185,260 @@ h1 {
 <h1>Work Record Dashboard</h1>
 
 <div class="year-select-wrap">
-<label for="yearSelect">Year</label>
+
+<label>Year</label>
+
 <select id="yearSelect" class="year-select"></select>
+
 </div>
 
 </div>
 </div>
 
-<section class="section grid kpis" id="kpiGrid"></section>
+
+<section class="section grid kpis">
+
+<div class="surface kpi">
+<div class="kpi-label">TOTAL RECORDS</div>
+<div class="kpi-value" id="kpiRecords">0</div>
+<div class="kpi-sub" id="kpiProjects"></div>
+</div>
+
+<div class="surface kpi">
+<div class="kpi-label">TOTAL WORDS</div>
+<div class="kpi-value" id="kpiWords">0</div>
+</div>
+
+<div class="surface kpi">
+<div class="kpi-label">MONTHLY AVG WORDS</div>
+<div class="kpi-value" id="kpiMonthly">0</div>
+</div>
+
+<div class="surface kpi">
+<div class="kpi-label">TOTAL FILES</div>
+<div class="kpi-value" id="kpiFiles">0</div>
+</div>
+
+</section>
+
 
 <section class="section grid two-up">
 
 <div class="surface panel">
+
 <h2>Yearly Volume</h2>
-<div id="volumeChart"></div>
+
+<canvas id="yearChart"></canvas>
+
 </div>
 
+
 <div class="surface panel">
+
 <h2>Category Breakdown</h2>
-<div id="categoryBreakdown"></div>
+
+<canvas id="catChart"></canvas>
+
 </div>
 
 </section>
+
+
 
 <section class="section surface panel">
 
 <h2>Projects</h2>
 
-<div id="projects"></div>
+<table class="projects-table">
+
+<thead>
+
+<tr>
+<th>Date</th>
+<th>Project</th>
+<th>Category</th>
+<th>Words</th>
+</tr>
+
+</thead>
+
+<tbody id="projectRows"></tbody>
+
+</table>
 
 </section>
 
 </div>
 
+
+
 <script>
 
-/////////////////////////////////////////////////////////
-// GitHub Actions がここを書き換えます
-/////////////////////////////////////////////////////////
+////////////////////////////////////////////
+// GitHub Actions がここを書き換える
+////////////////////////////////////////////
 
 const rows = [{"pjName": "28961_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atopic Dermatitis)", "workFile": "PEDISTAD_Patient Welcome Letter_V02 USA(en).docx\nPEDISTAD_Patient Visit Booklet Stickers_V02 USA(en).docx\nPEDISTAD_Patient Poster_V02 USA(en).docx\nPEDISTAD_Patient Flyer_V02 USA(en).docx\nPEDISTAD_Patient Brochure_V02 USA(en).docx\nPEDISTAD_Parent-Caregiver Study Guide_V02 USA(en).docx\nPEDISTAD_Doctor-to-Parent Letter_V02 USA(en)_A4.docx\nPEDISTAD_Communication Program SMS text and Emails_V02 USA(en).docx", "words": 1300, "offeredDate": "2023/04/20", "startDate": "2023/04/20", "completionDate": "2023/04/21", "workFiles": ["PEDISTAD_Patient Welcome Letter_V02 USA(en).docx", "PEDISTAD_Patient Visit Booklet Stickers_V02 USA(en).docx", "PEDISTAD_Patient Poster_V02 USA(en).docx", "PEDISTAD_Patient Flyer_V02 USA(en).docx", "PEDISTAD_Patient Brochure_V02 USA(en).docx", "PEDISTAD_Parent-Caregiver Study Guide_V02 USA(en).docx", "PEDISTAD_Doctor-to-Parent Letter_V02 USA(en)_A4.docx", "PEDISTAD_Communication Program SMS text and Emails_V02 USA(en).docx"]}, {"pjName": "36125_IQVIA_General_en-US_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Depression)", "workFile": "RELEASE OLE_Patient Study Guide_V02 Global(en).docx", "words": 1900, "offeredDate": "2023/04/27", "startDate": "2023/04/28", "completionDate": "2023/04/28", "workFiles": ["RELEASE OLE_Patient Study Guide_V02 Global(en).docx"]}, {"pjName": "44548_Pharma Intelligence_General_en-GB_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: R&D report)", "workFile": "13575 Citeline R&D White Paper V3.docx", "words": 2600, "offeredDate": "2023/05/02", "startDate": "2023/05/02", "completionDate": "2023/05/03", "workFiles": ["13575 Citeline R&D White Paper V3.docx"]}, {"pjName": "44192_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Hypoparathyroidism)", "workFile": "SHINE-2_Doctor-to-Parent-Guardian Letter_V01 Global(en)_A4.docx\nSHINE-2_Parent-Guardian Brochure_V01 Global(en).docx\nSHINE-2_Parent-Guardian Flyer_V01 Global(en).docx\nSHINE-2_Parent-Guardian Study Guide_V01 Global(en).docx\nSHINE-2_Patient ID Card_V01 Global(en).docx\nSHINE-2_Physician Referral Brochure_V01 Global(en).docx\nSHINE-2_Physician Referral Letter_V01 Global(en)_A4.docx\nSHINE-2_Social Media_Clinical Trial Posts_V01 Global(en).docx", "words": 4300, "offeredDate": "2023/05/04", "startDate": "2023/05/05", "completionDate": "2023/05/07", "workFiles": ["SHINE-2_Doctor-to-Parent-Guardian Letter_V01 Global(en)_A4.docx", "SHINE-2_Parent-Guardian Brochure_V01 Global(en).docx", "SHINE-2_Parent-Guardian Flyer_V01 Global(en).docx", "SHINE-2_Parent-Guardian Study Guide_V01 Global(en).docx", "SHINE-2_Patient ID Card_V01 Global(en).docx", "SHINE-2_Physician Referral Brochure_V01 Global(en).docx", "SHINE-2_Physician Referral Letter_V01 Global(en)_A4.docx", "SHINE-2_Social Media_Clinical Trial Posts_V01 Global(en).docx"]}, {"pjName": "42099_Langland_General_en-GB_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Hypoparathyroidism)", "workFile": "SHINE-2_Banner Ads_Global(en).docx", "words": 300, "offeredDate": "2023/05/04", "startDate": "2023/05/04", "completionDate": "2023/05/04", "workFiles": ["SHINE-2_Banner Ads_Global(en).docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atrial Fibrillation)", "workFile": "Librexia AF_Letter to Treating Physician_V01Global(en)_(A4).docx\nLibrexia AF_Physician Awareness Letter_V01Global(en)_(A4).docx\nLIBREXIA AFib A3 Site poster.docx\nLIBREXIA AFib A4 Patient Contact Info Form.docx\nLIBREXIA AFib A4 Talking Points Guide.docx", "words": 1700, "offeredDate": "2023/05/04", "startDate": "2023/05/04", "completionDate": "2023/05/05", "workFiles": ["Librexia AF_Letter to Treating Physician_V01Global(en)_(A4).docx", "Librexia AF_Physician Awareness Letter_V01Global(en)_(A4).docx", "LIBREXIA AFib A3 Site poster.docx", "LIBREXIA AFib A4 Patient Contact Info Form.docx", "LIBREXIA AFib A4 Talking Points Guide.docx"]}, {"pjName": "35621_Langland_General_en-GB_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Diabetes)", "workFile": "B11441-112 ONWARDS Visit appointment card_v4-AW.docx\nB11441-112 ONWARDS Visit appointment card EXT Period_v4-AW.docx", "words": 250, "offeredDate": "2023/05/11", "startDate": "2023/05/11", "completionDate": "2023/05/11", "workFiles": ["B11441-112 ONWARDS Visit appointment card_v4-AW.docx", "B11441-112 ONWARDS Visit appointment card EXT Period_v4-AW.docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Stroke)", "workFile": "LIBREXIA STROKE_Birthday Card_V01 Global(en).docx\nLIBREXIA STROKE_Email Message - Birthday Card_V01 Global(en).docx\nLIBREXIA STROKE_Email Message - Thank You Card_V01 Global(en).docx\nLIBREXIA STROKE_Letter to Treating Physician_V01 Global(en)_A4.docx\nLIBREXIA STROKE_Patient Welcome Letter_V01 Global(en).docx\nLIBREXIA STROKE_Pre-Consent Study Overview Animation Storyboard_V01 Global(en).docx\nLIBREXIA STROKE_Thank You Card_V01 Global(en).docx", "words": 1880, "offeredDate": "2023/05/17", "startDate": "2023/05/17", "completionDate": "2023/05/17", "workFiles": ["LIBREXIA STROKE_Birthday Card_V01 Global(en).docx", "LIBREXIA STROKE_Email Message - Birthday Card_V01 Global(en).docx", "LIBREXIA STROKE_Email Message - Thank You Card_V01 Global(en).docx", "LIBREXIA STROKE_Letter to Treating Physician_V01 Global(en)_A4.docx", "LIBREXIA STROKE_Patient Welcome Letter_V01 Global(en).docx", "LIBREXIA STROKE_Pre-Consent Study Overview Animation Storyboard_V01 Global(en).docx", "LIBREXIA STROKE_Thank You Card_V01 Global(en).docx"]}, {"pjName": "44982_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: HER2 Cancer)", "workFile": "3._5x2 Wallet DS1103074L Res.docx\n5x4 Pocket Guide DS1103074 LRes.docx\n11x8.5 Patient Guide DS1103074 LRes.docx\nA4 Patient Welcome Ltr_DS1103_074 LRes.docx\nDS 1103-074_Dr-to-Patient Letter_V01Global(en)_22Mar2023a_ A4.docx\nDS 1103-074_Physician Referral Letter_Escalation part_V01Global(en)_26Apr2023_A4 Lthd.docx\nDS 1103-074_Physician Referral Letter_Expansion part_V01Global(en)_26Apr2023 US Lthd.docx", "words": 2142, "offeredDate": "2023/05/22", "startDate": "2023/05/23", "completionDate": "2023/05/23", "workFiles": ["3._5x2 Wallet DS1103074L Res.docx", "5x4 Pocket Guide DS1103074 LRes.docx", "11x8.5 Patient Guide DS1103074 LRes.docx", "A4 Patient Welcome Ltr_DS1103_074 LRes.docx", "DS 1103-074_Dr-to-Patient Letter_V01Global(en)_22Mar2023a_ A4.docx", "DS 1103-074_Physician Referral Letter_Escalation part_V01Global(en)_26Apr2023_A4 Lthd.docx", "DS 1103-074_Physician Referral Letter_Expansion part_V01Global(en)_26Apr2023 US Lthd.docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Acute Coronary Syndrome)", "workFile": "Librexia ACS_Pre-Consent Study Overview Animation Storyboard_V01 Global(en).docx", "words": 800, "offeredDate": "2023/05/27", "startDate": "2023/05/28", "completionDate": "2023/05/28", "workFiles": ["Librexia ACS_Pre-Consent Study Overview Animation Storyboard_V01 Global(en).docx"]}, {"pjName": "44959_Pharma Intelligence_General_en-GB_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: R&D report)", "workFile": "Citeline R&D NAS Infographic.docx\nCiteline R+D Campaign NAS Whitepaper.docx", "words": 13400, "offeredDate": "2023/05/29", "startDate": "2023/05/29", "completionDate": "2023/06/04", "workFiles": ["Citeline R&D NAS Infographic.docx", "Citeline R+D Campaign NAS Whitepaper.docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atrial Fibrillation)", "workFile": "Librexia AF_Pre-Consent Study Overview Animation Storyboard_V01 Global(en)_23Mar2023_Clean.docx", "words": 920, "offeredDate": "2023/05/30", "startDate": "2023/05/31", "completionDate": "2023/05/31", "workFiles": ["Librexia AF_Pre-Consent Study Overview Animation Storyboard_V01 Global(en)_23Mar2023_Clean.docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Stroke)", "workFile": "LIBREXIA STROKE_I-E Criteria and Pathway Pocket Card_V01 Global(en).docx\nLIBREXIA STROKE_Mini Protocol Cover_V01 Global(en).docx\nLIBREXIA STROKE_Referral Reminder Cling_V01 Global(en).docx\nLIBREXIA STROKE_Site Poster_V01 Global(en).docx\nLIBREXIA STROKE_Talking Points Guide_V01 Global(en).docx", "words": 1600, "offeredDate": "2023/06/28", "startDate": "2023/06/29", "completionDate": "2023/06/29", "workFiles": ["LIBREXIA STROKE_I-E Criteria and Pathway Pocket Card_V01 Global(en).docx", "LIBREXIA STROKE_Mini Protocol Cover_V01 Global(en).docx", "LIBREXIA STROKE_Referral Reminder Cling_V01 Global(en).docx", "LIBREXIA STROKE_Site Poster_V01 Global(en).docx", "LIBREXIA STROKE_Talking Points Guide_V01 Global(en).docx"]}, {"pjName": "42117_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Obesity)", "workFile": "SYNCHRONIZE-CVOT Trial_Family and Friends Brochure_V01 Global(en).docx\nSYNCHRONIZE-CVOT Trial_Healthcare Support Brochure_V01 Global(en).docx\nSYNCHRONIZE-CVOT Trial_Milestone Certificates_V01 Global(en).docx\nSYNCHRONIZE-CVOT Trial_Participant Brochure_V01 Global(en).docx\nSYNCHRONIZE-CVOT Trial_Participant Guide_V01 Global(en).docx\nSYNCHRONIZE-CVOT Trial_Participant Poster_V01 Global(en).docx\nSYNCHRONIZE-CVOT Trial_Participant_Flyer_V01 Global(en).docx", "words": 6200, "offeredDate": "2023/07/06", "startDate": "2023/07/06", "completionDate": "2023/07/10", "workFiles": ["SYNCHRONIZE-CVOT Trial_Family and Friends Brochure_V01 Global(en).docx", "SYNCHRONIZE-CVOT Trial_Healthcare Support Brochure_V01 Global(en).docx", "SYNCHRONIZE-CVOT Trial_Milestone Certificates_V01 Global(en).docx", "SYNCHRONIZE-CVOT Trial_Participant Brochure_V01 Global(en).docx", "SYNCHRONIZE-CVOT Trial_Participant Guide_V01 Global(en).docx", "SYNCHRONIZE-CVOT Trial_Participant Poster_V01 Global(en).docx", "SYNCHRONIZE-CVOT Trial_Participant_Flyer_V01 Global(en).docx"]}, {"pjName": "42117_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Obesity)", "workFile": "SYNCHRONIZE CVOT Study_eConsent Video Storyboard_V01Global(en).docx", "words": 2600, "offeredDate": "2023/07/15", "startDate": "2023/07/15", "completionDate": "2023/07/16", "workFiles": ["SYNCHRONIZE CVOT Study_eConsent Video Storyboard_V01Global(en).docx"]}, {"pjName": "43524_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: NSCLC)", "workFile": "TeliMET NSCLC-01_Advocacy Letter_V01 Global(en)_A4.docx\nTeliMET NSCLC-01_Patient Brochure_V01 Global(en).docx\nTeliMET NSCLC-01_Patient Study Guide_V01 Global(en).docx\nTeliMET NSCLC-01_Physician Referral Brochure_V01 Global(en).docx", "words": 3000, "offeredDate": "2023/07/18", "startDate": "2023/07/19", "completionDate": "2023/07/20", "workFiles": ["TeliMET NSCLC-01_Advocacy Letter_V01 Global(en)_A4.docx", "TeliMET NSCLC-01_Patient Brochure_V01 Global(en).docx", "TeliMET NSCLC-01_Patient Study Guide_V01 Global(en).docx", "TeliMET NSCLC-01_Physician Referral Brochure_V01 Global(en).docx"]}, {"pjName": "44192_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Hypoparathyroidism)", "workFile": "AMBA_Patient Non-Screening Visit Fecal Sample Collection Instructions_V01 Global(en)_Ltr.docx\nAMBA_Patient Screening Fecal Sample Collection Instructions_V01 Global(en)_Ltr.docx", "words": 784, "offeredDate": "2023/08/08", "startDate": "2023/08/08", "completionDate": "2023/08/08", "workFiles": ["AMBA_Patient Non-Screening Visit Fecal Sample Collection Instructions_V01 Global(en)_Ltr.docx", "AMBA_Patient Screening Fecal Sample Collection Instructions_V01 Global(en)_Ltr.docx"]}, {"pjName": "45496_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Solid Tumor)", "workFile": "DS3939-077_Doctor-to-Patient Letter_V01 Global(en)_A4.docx\nDS3939-077_Patient Brochure_V01 Global(en).docx\nDS3939-077_Physician Referral Letter_V01 Global(en)_A4.docx", "words": 1088, "offeredDate": "2023/08/11", "startDate": "2023/08/12", "completionDate": "2023/08/12", "workFiles": ["DS3939-077_Doctor-to-Patient Letter_V01 Global(en)_A4.docx", "DS3939-077_Patient Brochure_V01 Global(en).docx", "DS3939-077_Physician Referral Letter_V01 Global(en)_A4.docx"]}, {"pjName": "41272_OneStudyTeam_General_en-US_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Site Manual)", "workFile": "StudyTeam Data Privacy Document.docx\nTechnical and Organizational Measures.docx", "words": 3876, "offeredDate": "2023/08/18", "startDate": "2023/08/21", "completionDate": "2023/08/22", "workFiles": ["StudyTeam Data Privacy Document.docx", "Technical and Organizational Measures.docx"]}, {"pjName": "36724_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: SLE・CLE)", "workFile": "WILLOW_D&I Participant Brochure - Outside Study_V01 ROW(en).docx\nWILLOW_D&I Participant Brochure - Outside Study_V01 USA(en).docx", "words": 657, "offeredDate": "2023/08/18", "startDate": "2023/08/18", "completionDate": "2023/08/18", "workFiles": ["WILLOW_D&I Participant Brochure - Outside Study_V01 ROW(en).docx", "WILLOW_D&I Participant Brochure - Outside Study_V01 USA(en).docx"]}, {"pjName": "46610_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Heart Disease)", "workFile": "FUEL-2_Advocacy Letter_V01 Global(en)_A4.docx\nFUEL-2_Parent-Guardian Brochure_V01 Global(en).docx\nFUEL-2_Parent-Guardian Welcome Letter_V01 Global(en).docx\nFUEL-2_Patient ID Card_V01 Global(en).docx\nFUEL-2_Pediatric Assent Guide_V01 Global(en).docx\nFUEL-2_Pediatric Visit Booklet_V01 Global(en).docx\nFUEL-2_Physician Referral Brochure_V01 Global(en).docx\nFUEL-2_Physician Referral Letter_V01 Global(en)_A4.docx\nFUEL-2_School Absence Letter_V01 Global(en)_A4.docx", "words": 4770, "offeredDate": "2023/08/19", "startDate": "2023/08/19", "completionDate": "2023/08/21", "workFiles": ["FUEL-2_Advocacy Letter_V01 Global(en)_A4.docx", "FUEL-2_Parent-Guardian Brochure_V01 Global(en).docx", "FUEL-2_Parent-Guardian Welcome Letter_V01 Global(en).docx", "FUEL-2_Patient ID Card_V01 Global(en).docx", "FUEL-2_Pediatric Assent Guide_V01 Global(en).docx", "FUEL-2_Pediatric Visit Booklet_V01 Global(en).docx", "FUEL-2_Physician Referral Brochure_V01 Global(en).docx", "FUEL-2_Physician Referral Letter_V01 Global(en)_A4.docx", "FUEL-2_School Absence Letter_V01 Global(en)_A4.docx"]}, {"pjName": "47144_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Progressive Supranuclear Palsy)", "workFile": "ORION Study Retention Video Storyboard_V01_Global(en)_29Aug2023a_clean (2).docx\nORION_Dr-to-Patient Letter_V01 Global(en)_A4.docx\nORION_Participant Brochure_V01 Global(en).docx\nORION_Participant ID Card_V01 Global(en).docx\nORION_Participant Study Guide_V01 Global(en).docx\nORION_Physician Referral Letter_V01 Global(en)_A4.docx", "words": 5127, "offeredDate": "2023/09/07", "startDate": "2023/09/08", "completionDate": "2023/09/10", "workFiles": ["ORION Study Retention Video Storyboard_V01_Global(en)_29Aug2023a_clean (2).docx", "ORION_Dr-to-Patient Letter_V01 Global(en)_A4.docx", "ORION_Participant Brochure_V01 Global(en).docx", "ORION_Participant ID Card_V01 Global(en).docx", "ORION_Participant Study Guide_V01 Global(en).docx", "ORION_Physician Referral Letter_V01 Global(en)_A4.docx"]}, {"pjName": "42384_Langland_General_en-GB_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Chronic Obstructive Pulmonary Disease)", "workFile": "ARNASA_Study Visit Guide_V2_18Aug23_English (Master) (Protocol version 4)_compared.docx", "words": 787, "offeredDate": "2023/09/14", "startDate": "2023/09/15", "completionDate": "2023/09/15", "workFiles": ["ARNASA_Study Visit Guide_V2_18Aug23_English (Master) (Protocol version 4)_compared.docx"]}, {"pjName": "42117_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Obesity)", "workFile": "SYNCHRONIZE-1_Family and Friends Brochure_V01 Global(en)_spreads.docx\nSYNCHRONIZE-1_Healthcare Support Brochure_V01 Global(en)_spreads.docx\nSYNCHRONIZE-1_Milestone Certificates_V01 Global(en).docx\nSYNCHRONIZE-1_Participant Food and Activity Diary Guide_V01 Global(en)_spreads.docx\nSYNCHRONIZE-1_Participant Food Diary Pages_V01 Global(en).docx\nSYNCHRONIZE-1_Participant Glycemic Episode Diary Guide_V01 Global(en)_spreads.docx\nSYNCHRONIZE-1_Participant Glycemic Episode Diary Pages_V01 Global(en).docx\nSYNCHRONIZE-1_Participant Physical Activity Diary Pages_V01 Global(en).docx\nSYNCHRONIZE-1_Participant Trial Guide_V01 Global(en)_spreads.docx\nSYNCHRONIZE-1_Participant Weight Diary Pages_V01 Global(en).docx\nSYNCHRONIZE-1_Patient Brochure_V01 Global(en)_spreads.docx\nSYNCHRONIZE-1_Patient Flyer_V01 Global(en).docx\nSYNCHRONIZE-1_Patient Poster_V01 Global(en).docx", "words": 646, "offeredDate": "2023/09/17", "startDate": "2023/09/17", "completionDate": "2023/09/17", "workFiles": ["SYNCHRONIZE-1_Family and Friends Brochure_V01 Global(en)_spreads.docx", "SYNCHRONIZE-1_Healthcare Support Brochure_V01 Global(en)_spreads.docx", "SYNCHRONIZE-1_Milestone Certificates_V01 Global(en).docx", "SYNCHRONIZE-1_Participant Food and Activity Diary Guide_V01 Global(en)_spreads.docx", "SYNCHRONIZE-1_Participant Food Diary Pages_V01 Global(en).docx", "SYNCHRONIZE-1_Participant Glycemic Episode Diary Guide_V01 Global(en)_spreads.docx", "SYNCHRONIZE-1_Participant Glycemic Episode Diary Pages_V01 Global(en).docx", "SYNCHRONIZE-1_Participant Physical Activity Diary Pages_V01 Global(en).docx", "SYNCHRONIZE-1_Participant Trial Guide_V01 Global(en)_spreads.docx", "SYNCHRONIZE-1_Participant Weight Diary Pages_V01 Global(en).docx", "SYNCHRONIZE-1_Patient Brochure_V01 Global(en)_spreads.docx", "SYNCHRONIZE-1_Patient Flyer_V01 Global(en).docx", "SYNCHRONIZE-1_Patient Poster_V01 Global(en).docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atrial Fibrillation)", "workFile": "LIBREXIA ACS A4 Newsletter 1.docx", "words": 364, "offeredDate": "2023/09/19", "startDate": "2023/09/19", "completionDate": "2023/09/19", "workFiles": ["LIBREXIA ACS A4 Newsletter 1.docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atrial Fibrillation)", "workFile": "LIBREXIA ACS_Participant Newsletter Issue 2_V01 Global(en).docx", "words": 449, "offeredDate": "2023/09/20", "startDate": "2023/09/20", "completionDate": "2023/09/20", "workFiles": ["LIBREXIA ACS_Participant Newsletter Issue 2_V01 Global(en).docx"]}, {"pjName": "46610_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Heart Disease)", "workFile": "FUEL-2_eDiary _ Medication compliance animation video storyboard_V01 Global(en).docx", "words": 503, "offeredDate": "2023/09/22", "startDate": "2023/09/22", "completionDate": "2023/09/22", "workFiles": ["FUEL-2_eDiary _ Medication compliance animation video storyboard_V01 Global(en).docx"]}, {"pjName": "47488_Pharma Intelligence_General_en-GB_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: R&D report)", "workFile": "6657_Citeline-RWD-Flyer_v7.docx\nJN6658 RWD - Early Clinical Use Case_Final.docx\nJN6658 RWD - Protocol Design Use Case_Final.docx\nJN6658 RWD - Site Selection Use Case_Final.docx", "words": 1470, "offeredDate": "2023/10/09", "startDate": "2023/10/09", "completionDate": "2023/10/09", "workFiles": ["6657_Citeline-RWD-Flyer_v7.docx", "JN6658 RWD - Early Clinical Use Case_Final.docx", "JN6658 RWD - Protocol Design Use Case_Final.docx", "JN6658 RWD - Site Selection Use Case_Final.docx"]}, {"pjName": "34714_IQVIA_General_en-US_Default_Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Chronic Lymphocytic Lymphoma)", "workFile": "BRUIN CLL-322_Participant Study Guide_V04 Global(en).docx", "words": 274, "offeredDate": "2023/10/19", "startDate": "2023/10/19", "completionDate": "2023/10/19", "workFiles": ["BRUIN CLL-322_Participant Study Guide_V04 Global(en).docx"]}, {"pjName": "33014_Langland_General_en-GB_Default_Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atypical Hemolytic Uremic Syndrome)", "workFile": "COMMUTE-a_Patient Information Brochure_V1_02Aug23_English (US).docx", "words": 1252, "offeredDate": "2023/10/22", "startDate": "2023/10/22", "completionDate": "2023/10/22", "workFiles": ["COMMUTE-a_Patient Information Brochure_V1_02Aug23_English (US).docx"]}, {"pjName": "48138_Pharma Intelligence_General_en-GB_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: R&D report)", "workFile": "Infographic_Clinical Trials Roundup 2022.docx\nWhitepaper_Clinical Trials Roundup 2022.docx", "words": 5207, "offeredDate": "2023/11/02", "startDate": "2023/11/02", "completionDate": "2023/11/04", "workFiles": ["Infographic_Clinical Trials Roundup 2022.docx", "Whitepaper_Clinical Trials Roundup 2022.docx"]}, {"pjName": "Lancet_LR-1023-620", "role": "Translation", "category": "Medical\n(Clinical Trial: R&D report)", "workFile": "CONFIDENTIAL_ES.docx", "words": 2728, "offeredDate": "2023/11/09", "startDate": "2023/11/09", "completionDate": "2023/11/09", "workFiles": ["CONFIDENTIAL_ES.docx"]}, {"pjName": "40027_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Ulcerative Colitis)", "workFile": "MAESTRO LTE_CD Patient Study Guide_V03 Global(en).docx\nMAESTRO LTE_UC Patient Study Guide_V03 Global(en).docx", "words": 1500, "offeredDate": "2023/11/15", "startDate": "2023/11/15", "completionDate": "2023/11/15", "workFiles": ["MAESTRO LTE_CD Patient Study Guide_V03 Global(en).docx", "MAESTRO LTE_UC Patient Study Guide_V03 Global(en).docx"]}, {"pjName": "28961_IQVIA_General_en-US_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Atopic dermatitis)", "workFile": "PEDISTAD A4 Patient Newsletter 4.docx", "words": 948, "offeredDate": "2023/11/15", "startDate": "2023/11/15", "completionDate": "2023/11/15", "workFiles": ["PEDISTAD A4 Patient Newsletter 4.docx"]}, {"pjName": "33014_Langland_General_en-GB_Default-Default", "role": "Translation", "category": "Medical\n(Clinical Trial: Paroxysmal nocturnal hemoglobinuria)", "workFile": "COMMODORE_IFU Transfer Needle_V5_20Oct23_English (Master).docx\nCOMMODORE 2_Visit Guide_V5_20Oct23_English (Master).docx\nCOMMODORE 2_Visit Guide_V5_20Oct23_English (Master)_ADULT ONLY.docx\nCOMMODORE 1_Visit Guide_V5_20Oct23_English (Master).docx\nCOMMODORE 1_Visit Guide_V5_20Oct23_English (Master)_ADULT ONLY.docx", "words": 600, "offeredDate": "2023/11/28", "startDate": "2023/11/29", "completionDate": "2023/11/29", "workFiles": ["COMMODORE_IFU Transfer Needle_V5_20Oct23_English (Master).docx", "COMMODORE 2_Visit Guide_V5_20Oct23_English (Master).docx", "COMMODORE 2_Visit Guide_V5_20Oct23_English (Master)_ADULT ONLY.docx", "COMMODORE 1_Visit Guide_V5_20Oct23_English (Master).docx", "COMMODORE 1_Visit Guide_V5_20Oct23_English (Master)_ADULT ONLY.docx"]}, {"pjName": "48095_Langland_General_en-GB_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Chronic Obstructive Pulmonary Disease)", "workFile": "ALNASA OLE_Thank You Letter_V1_13Oct23_English (Master)_A4.docx\nALNASA OLE_Informed Consent Flipchart_V1_17Oct23_English (Master).docx", "words": 875, "offeredDate": "2023/12/12", "startDate": "2023/12/12", "completionDate": "2023/12/12", "workFiles": ["ALNASA OLE_Thank You Letter_V1_13Oct23_English (Master)_A4.docx", "ALNASA OLE_Informed Consent Flipchart_V1_17Oct23_English (Master).docx"]}, {"pjName": "48139_IQVIA_General_en-US_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Generalized Myasthenia Gravis)", "workFile": "MyClad MS700568_0183 Physician Referral Letter_V01Global(en)_06Nov2023_A4ltrhd (unlocked).docx\nMyClad MS700568_0183 Patient Poster_V01Global(en)_28Nov2023.docx\nMyClad MS700568_0183 Patient Emergency Card_V01ROW(en)_28Nov2023.docx\nMyClad MS700568_0183 Dr-to-Patient Letter_V01Global(en)_09Nov2023a_A4ltrhd (unlocked).docx", "words": 1072, "offeredDate": "2023/12/21", "startDate": "2023/12/21", "completionDate": "2023/12/21", "workFiles": ["MyClad MS700568_0183 Physician Referral Letter_V01Global(en)_06Nov2023_A4ltrhd (unlocked).docx", "MyClad MS700568_0183 Patient Poster_V01Global(en)_28Nov2023.docx", "MyClad MS700568_0183 Patient Emergency Card_V01ROW(en)_28Nov2023.docx", "MyClad MS700568_0183 Dr-to-Patient Letter_V01Global(en)_09Nov2023a_A4ltrhd (unlocked).docx"]}, {"pjName": "41777_IQVIA_General_en-US_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Stroke)", "workFile": "LIBREXIA STROKE_Participant Newsletter Issue 1_V01 Global(en).docx\nLIBREXIA STROKE_Letter to Treating Physician_V02 Global(en)_A4.docx\nLIBREXIA STROKE_Letter to Rehab Facility_V01 Global(en)_A4.docx", "words": 1115, "offeredDate": "2023/12/22", "startDate": "2023/12/22", "completionDate": "2023/12/22", "workFiles": ["LIBREXIA STROKE_Participant Newsletter Issue 1_V01 Global(en).docx", "LIBREXIA STROKE_Letter to Treating Physician_V02 Global(en)_A4.docx", "LIBREXIA STROKE_Letter to Rehab Facility_V01 Global(en)_A4.docx"]}, {"pjName": "58631_Langland_General_en-GB_Default-Default", "role": "Review", "category": "Medical\n(Clinical Trial: Pulmonary Fibrosis)", "workFile": "DROP-FPF 1305-0069_Potential Participant Information Brochure_V1_21Aug25_Master (English).docx", "words": 1100, "offeredDate": "2023/09/01", "startDate": "2023/09/01", "completionDate": "2023/09/01", "workFiles": ["DROP-FPF 1305-0069_Potential Participant Information Brochure_V1_21Aug25_Master (English).docx"]}];
 
-/////////////////////////////////////////////////////////
-// dashboard logic
-/////////////////////////////////////////////////////////
+////////////////////////////////////////////
 
-function groupBy(arr,key){
-  return arr.reduce((acc,item)=>{
-    const val=item[key];
-    (acc[val]=acc[val]||[]).push(item);
-    return acc;
-  },{});
-}
 
-function getYears(data){
-  const years=[...new Set(data.map(r=>r.sortDate?.slice(0,4)))];
-  return years.sort();
-}
+function parseYear(date){
 
-function filterYear(data,year){
-  if(year==="All") return data;
-  return data.filter(r=>r.sortDate?.startsWith(year));
-}
-
-function renderYearSelector(data){
-
-  const years=getYears(data);
-
-  const select=document.getElementById("yearSelect");
-
-  select.innerHTML="";
-
-  ["All",...years].forEach(y=>{
-    const opt=document.createElement("option");
-    opt.value=y;
-    opt.textContent=y;
-    select.appendChild(opt);
-  });
-
-  select.addEventListener("change",()=>{
-    renderDashboard(select.value);
-  });
+return date.split("/")[0];
 
 }
 
-function sumWords(data){
-  return data.reduce((sum,r)=>sum+(Number(r.words)||0),0);
+
+function updateDashboard(data){
+
+document.getElementById("kpiRecords").textContent=data.length;
+
+const totalWords=data.reduce((a,b)=>a+b.words,0);
+
+document.getElementById("kpiWords").textContent=totalWords.toLocaleString();
+
+document.getElementById("kpiMonthly").textContent=Math.round(totalWords/12).toLocaleString();
+
+const totalFiles=data.reduce((a,b)=>a+b.workFiles.length,0);
+
+document.getElementById("kpiFiles").textContent=totalFiles;
+
+const uniqueProjects=new Set(data.map(x=>x.pjName));
+
+document.getElementById("kpiProjects").textContent=uniqueProjects.size+" unique projects";
+
+const yearly={};
+
+data.forEach(r=>{
+
+const y=parseYear(r.completionDate);
+
+yearly[y]=(yearly[y]||0)+r.words;
+
+});
+
+new Chart(
+
+document.getElementById("yearChart"),
+
+{
+
+type:"bar",
+
+data:{
+
+labels:Object.keys(yearly),
+
+datasets:[{
+
+data:Object.values(yearly)
+
+}]
+
 }
 
-function renderKPIs(data){
+}
 
-  const container=document.getElementById("kpiGrid");
+);
 
-  const totalWords=sumWords(data);
 
-  const projects=new Set(data.map(r=>r.pjName));
+const cats={};
 
-  container.innerHTML=`
+data.forEach(r=>{
 
-<div class="surface kpi">
-<div class="kpi-label">TOTAL RECORDS</div>
-<div class="kpi-value">${data.length}</div>
-<div class="kpi-sub">${projects.size} unique projects</div>
-</div>
+cats[r.category]=(cats[r.category]||0)+r.words;
 
-<div class="surface kpi">
-<div class="kpi-label">TOTAL WORDS</div>
-<div class="kpi-value">${totalWords.toLocaleString()}</div>
-</div>
+});
 
-<div class="surface kpi">
-<div class="kpi-label">MONTHLY AVG WORDS</div>
-<div class="kpi-value">${Math.round(totalWords/12).toLocaleString()}</div>
-</div>
+new Chart(
 
-<div class="surface kpi">
-<div class="kpi-label">TOTAL FILES</div>
-<div class="kpi-value">${data.reduce((sum,r)=>sum+(r.workFiles?.length||1),0)}</div>
-</div>
+document.getElementById("catChart"),
+
+{
+
+type:"doughnut",
+
+data:{
+
+labels:Object.keys(cats),
+
+datasets:[{
+
+data:Object.values(cats)
+
+}]
+
+}
+
+}
+
+);
+
+
+const tbody=document.getElementById("projectRows");
+
+tbody.innerHTML="";
+
+data
+
+.sort((a,b)=>b.completionDate.localeCompare(a.completionDate))
+
+.forEach(r=>{
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>${r.completionDate}</td>
+
+<td>${r.pjName}</td>
+
+<td>${r.category}</td>
+
+<td>${r.words.toLocaleString()}</td>
+
+</tr>
 
 `;
 
-}
-
-function renderDashboard(year){
-
-  const filtered=filterYear(rows,year);
-
-  renderKPIs(filtered);
+});
 
 }
 
-renderYearSelector(rows);
 
-renderDashboard("All");
+const years=["All",...new Set(rows.map(r=>parseYear(r.completionDate)))];
+
+const sel=document.getElementById("yearSelect");
+
+years.forEach(y=>{
+
+const o=document.createElement("option");
+
+o.value=y;
+
+o.textContent=y;
+
+sel.appendChild(o);
+
+});
+
+sel.addEventListener("change",()=>{
+
+if(sel.value==="All"){
+
+updateDashboard(rows);
+
+}else{
+
+updateDashboard(rows.filter(r=>parseYear(r.completionDate)===sel.value));
+
+}
+
+});
+
+
+updateDashboard(rows);
 
 </script>
 
