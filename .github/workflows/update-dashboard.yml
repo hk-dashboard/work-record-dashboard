@@ -28,7 +28,6 @@ jobs:
 
           SHEET_URL = "https://docs.google.com/spreadsheets/d/1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo/edit?gid=1629472964#gid=1629472964"
 
-          # sheet id と gid を安全に抽出
           sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
 
           if "gid=" in SHEET_URL:
@@ -38,16 +37,23 @@ jobs:
               gid = "0"
 
           csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-
           print("CSV URL:", csv_url)
 
           df = pd.read_csv(csv_url)
-
           print("columns:", df.columns.tolist())
 
+          # Word Amount を数値化
+          df["Word Amount"] = (
+              df["Word Amount"]
+              .astype(str)
+              .str.replace(",", "", regex=False)
+              .str.strip()
+          )
+          df["Word Amount"] = pd.to_numeric(df["Word Amount"], errors="coerce").fillna(0)
+
           total_records = len(df)
-          total_words = df["Word Amount"].fillna(0).sum()
-          total_files = df["Work File"].fillna("").str.count("\n").add(1).sum()
+          total_words = df["Word Amount"].sum()
+          total_files = df["Work File"].fillna("").astype(str).str.count("\n").add(1).sum()
           unique_projects = df["PJ Name"].nunique()
 
           html = f"""
