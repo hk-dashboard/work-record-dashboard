@@ -33,13 +33,16 @@ jobs:
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
-          echo "$GOOGLE_SERVICE_ACCOUNT_JSON" > service_account.json
+          cat > service_account.json <<'EOF'
+          ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          EOF
 
       - name: Update dashboard from Google Sheets
         run: |
           python <<'PY'
-          import re
           import json
+          import re
+          from datetime import datetime
           import gspread
           from google.oauth2.service_account import Credentials
 
@@ -63,33 +66,49 @@ jobs:
           def clean_int(value):
               if value is None:
                   return 0
+
               s = str(value).strip()
+
               if s == "":
                   return 0
-              s = s.replace(",", "")
-              return int(float(s))
 
-          def normalize_date(sheet_year, date_raw):
-              if not date_raw:
+              s = s.replace(",", "")
+
+              try:
+                  return int(float(s))
+              except Exception:
+                  return 0
+
+          def normalize_date(value, fallback_year):
+              s = str(value).strip()
+
+              if not s:
                   return None
 
-              d = str(date_raw).strip().replace("-", "/")
-              parts = d.split("/")
+              for fmt in (
+                  "%Y/%m/%d",
+                  "%Y-%m-%d",
+                  "%m/%d/%Y",
+                  "%m-%d-%Y",
+                  "%m/%d/%y",
+                  "%m-%d-%y",
+              ):
+                  try:
+                      dt = datetime.strptime(s, fmt)
+                      return dt.strftime("%Y/%m/%d")
+                  except Exception:
+                      pass
 
-              if len(parts) == 3:
-                  if len(parts[0]) == 4:
-                      y, m, day = parts[0], parts[1], parts[2]
-                  else:
-                      m, day, y = parts[0], parts[1], parts[2]
-                  return f"{y}/{m.zfill(2)}/{day.zfill(2)}"
+              s2 = s.replace("-", "/")
+              parts = [p.strip() for p in s2.split("/")]
 
               if len(parts) == 2:
-                  m, day = parts[0], parts[1]
-                  return f"{sheet_year}/{m.zfill(2)}/{day.zfill(2)}"
+                  mm, dd = parts
+                  return f"{fallback_year}/{mm.zfill(2)}/{dd.zfill(2)}"
 
               return None
 
-          all_rows = []
+          rows = []
 
           for sheet_name in YEAR_SHEETS:
               try:
@@ -98,6 +117,7 @@ jobs:
                   continue
 
               values = ws.get_all_values()
+
               if not values or len(values) < 2:
                   continue
 
@@ -105,46 +125,45 @@ jobs:
               data_rows = values[1:]
 
               for row in data_rows:
-                  record = dict(zip(headers, row + [""] * (len(headers) - len(row))))
+                  padded_row = row + [""] * (len(headers) - len(row))
+                  record = dict(zip(headers, padded_row))
 
-                  completion_date = normalize_date(sheet_name, record.get("Date", ""))
+                  pj_name = str(record.get("PJ Name", "")).strip()
+                  role = str(record.get("Role", "")).strip()
+                  category = str(record.get("Category", "")).strip()
+                  work_file_raw = str(record.get("Work File", "")).strip()
+                  words_raw = str(record.get("Word Amount", "")).strip()
+                  offered_raw = str(record.get("Offered Date", "")).strip()
+                  start_raw = str(record.get("Start Date", "")).strip()
+                  completion_raw = str(record.get("Completion Date", "")).strip()
+
+                  completion_date = normalize_date(completion_raw, sheet_name)
                   if not completion_date:
                       continue
 
-                  word_amount_raw = record.get("Word Amount", "").strip()
-                  work_file_raw = record.get("Work File", "").strip()
-                  project = record.get("Project", "").strip()
-                  category = record.get("Category", "").strip()
-
-                  try:
-                      words = clean_int(word_amount_raw)
-                  except Exception:
-                      words = 0
+                  offered_date = normalize_date(offered_raw, sheet_name) or completion_date
+                  start_date = normalize_date(start_raw, sheet_name) or completion_date
 
                   work_files = [x.strip() for x in work_file_raw.split("\n") if x.strip()]
 
-                  all_rows.append({
-                      "pjName": project,
-                      "role": "",
+                  rows.append({
+                      "pjName": pj_name,
+                      "role": role,
                       "category": category,
                       "workFile": work_file_raw,
-                      "words": words,
-                      "offeredDate": completion_date,
-                      "startDate": completion_date,
+                      "words": clean_int(words_raw),
+                      "offeredDate": offered_date,
+                      "startDate": start_date,
                       "completionDate": completion_date,
                       "workFiles": work_files
                   })
 
-          all_rows = sorted(
-              all_rows,
-              key=lambda x: x["completionDate"],
-              reverse=True
-          )
-
-          js_rows = json.dumps(all_rows, ensure_ascii=False)
+          rows = sorted(rows, key=lambda x: x["completionDate"], reverse=True)
 
           with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
               html = f.read()
+
+          js_rows = json.dumps(rows, ensure_ascii=False)
 
           new_html, count = re.subn(
               r"const rows = \[.*?\];",
@@ -155,12 +174,12 @@ jobs:
           )
 
           if count == 0:
-              raise RuntimeError("const rows = [...] が見つかりません")
+              raise RuntimeError("const rows = [...] not found in index.html")
 
           with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
               f.write(new_html)
 
-          print(f"Updated {OUTPUT_FILE} with {len(all_rows)} rows.")
+          print(f"Updated index.html with {len(rows)} rows.")
           PY
 
       - name: Commit changes
