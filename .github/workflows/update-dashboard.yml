@@ -44,19 +44,21 @@ jobs:
           import gspread
           from google.oauth2.service_account import Credentials
 
-          # ===== 設定 =====
           SPREADSHEET_NAME = "Work Record"
           OUTPUT_FILE = "work_record_dashboard_v10.html"
-          YEAR_SHEETS = [str(y) for y in range(2023, 2031)]  # 2023, 2024, 2025, 2026...
+          YEAR_SHEETS = [str(y) for y in range(2023, 2031)]
+
           SCOPES = [
               "https://www.googleapis.com/auth/spreadsheets.readonly",
               "https://www.googleapis.com/auth/drive.readonly",
           ]
 
-          # ===== 認証 =====
-          creds = Credentials.from_service_account_file("service_account.json", scopes=SCOPES)
-          gc = gspread.authorize(creds)
+          creds = Credentials.from_service_account_file(
+              "service_account.json",
+              scopes=SCOPES
+          )
 
+          gc = gspread.authorize(creds)
           sh = gc.open(SPREADSHEET_NAME)
 
           def clean_int(value):
@@ -77,6 +79,7 @@ jobs:
                   continue
 
               values = ws.get_all_values()
+
               if not values or len(values) < 2:
                   continue
 
@@ -84,11 +87,23 @@ jobs:
               data_rows = values[1:]
 
               for row in data_rows:
-                  record = dict(zip(headers, row + [""] * (len(headers) - len(row))))
 
-                  date = record.get("Date", "").strip()
-                  if not date:
+                  record = dict(zip(
+                      headers,
+                      row + [""] * (len(headers) - len(row))
+                  ))
+
+                  date_raw = record.get("Date", "").strip()
+
+                  if not date_raw:
                       continue
+
+                  # 年シート名を付与
+                  if "-" in date_raw:
+                      date = date_raw
+                  else:
+                      month_day = date_raw.replace("/", "-").zfill(5)
+                      date = f"{sheet_name}-{month_day}"
 
                   category = record.get("Category", "").strip()
                   client = record.get("Client", "").strip()
@@ -99,7 +114,7 @@ jobs:
 
                   try:
                       word_amount = clean_int(word_amount_raw)
-                  except Exception:
+                  except:
                       word_amount = 0
 
                   all_rows.append({
@@ -112,19 +127,24 @@ jobs:
                       "note": note,
                   })
 
-          # 日付降順っぽく並べたい場合の簡易ソート
-          # Date が YYYY-MM-DD 想定
           def sort_key(x):
               return x.get("date", "")
 
-          all_rows = sorted(all_rows, key=sort_key, reverse=True)
+          all_rows = sorted(
+              all_rows,
+              key=sort_key,
+              reverse=True
+          )
 
-          js_rows = json.dumps(all_rows, ensure_ascii=False, indent=2)
+          js_rows = json.dumps(
+              all_rows,
+              ensure_ascii=False,
+              indent=2
+          )
 
           with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
               html = f.read()
 
-          # rows = [...] を差し替え
           new_html, count = re.subn(
               r"rows\s*=\s*\[(?:.|\n|\r)*?\]",
               f"rows = {js_rows}",
@@ -133,19 +153,24 @@ jobs:
           )
 
           if count == 0:
-              raise RuntimeError("Could not find rows = [] block in HTML file.")
+              raise RuntimeError(
+                  "Could not find rows = [] block in HTML file."
+              )
 
           with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
               f.write(new_html)
 
           print(f"Updated {OUTPUT_FILE} with {len(all_rows)} rows.")
+
           PY
 
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add work_record_dashboard_v10.html
+
           git diff --cached --quiet || git commit -m "auto update dashboard"
 
       - name: Push changes
