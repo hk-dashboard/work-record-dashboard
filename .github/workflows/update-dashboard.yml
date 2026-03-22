@@ -159,15 +159,19 @@ jobs:
                   })
 
           rows = sorted(rows, key=lambda x: x["completionDate"], reverse=True)
+          js_rows = json.dumps(rows, ensure_ascii=False)
 
           with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
               html = f.read()
 
-          js_rows = json.dumps(rows, ensure_ascii=False)
+          pattern = r"const rows = \[.*?\];"
+
+          def replacement(_match):
+              return f"const rows = {js_rows};"
 
           new_html, count = re.subn(
-              r"const rows = \[.*?\];",
-              f"const rows = {js_rows};",
+              pattern,
+              replacement,
               html,
               count=1,
               flags=re.S
