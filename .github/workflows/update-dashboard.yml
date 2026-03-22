@@ -33,6 +33,9 @@ jobs:
 
           df = pd.read_csv(csv_url)
 
+          print(df.columns.tolist())
+          print(df.columns.tolist())
+
           total_records = len(df)
           total_words = df["Word Amount"].sum()
           total_files = df["Work File"].str.count("\n").add(1).sum()
