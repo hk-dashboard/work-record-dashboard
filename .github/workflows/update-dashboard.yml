@@ -42,7 +42,8 @@ jobs:
           python <<'PY'
           import json
           import re
-          from datetime import datetime
+          from datetime import datetime, date
+
           import gspread
           from google.oauth2.service_account import Credentials
 
@@ -55,13 +56,13 @@ jobs:
               "https://www.googleapis.com/auth/drive.readonly",
           ]
 
-          creds = Credentials.from_service_account_file(
-              "service_account.json",
-              scopes=SCOPES
-          )
-
-          gc = gspread.authorize(creds)
-          sh = gc.open(SPREADSHEET_NAME)
+          ROLE_MAP = {
+              "Review": "Proofreading",
+              "Proofreading": "Proofreading",
+              "Translation": "Translation",
+              "MTPE": "MTPE",
+              "LQA": "LQA",
+          }
 
           def clean_int(value):
               if value is None:
@@ -80,33 +81,49 @@ jobs:
                   return 0
 
           def normalize_date(value, fallback_year):
+              if value is None:
+                  return ""
+
+              if isinstance(value, datetime):
+                  return value.strftime("%Y-%m-%d")
+
+              if isinstance(value, date):
+                  return value.strftime("%Y-%m-%d")
+
               s = str(value).strip()
 
-              if not s:
-                  return None
+              if s == "":
+                  return ""
 
               for fmt in (
-                  "%Y/%m/%d",
                   "%Y-%m-%d",
+                  "%Y/%m/%d",
                   "%m/%d/%Y",
                   "%m-%d-%Y",
                   "%m/%d/%y",
                   "%m-%d-%y",
               ):
                   try:
-                      dt = datetime.strptime(s, fmt)
-                      return dt.strftime("%Y/%m/%d")
+                      return datetime.strptime(s, fmt).strftime("%Y-%m-%d")
                   except Exception:
                       pass
 
-              s2 = s.replace("-", "/")
-              parts = [p.strip() for p in s2.split("/")]
+              s2 = s.replace("/", "-")
+              parts = [p.strip() for p in s2.split("-") if p.strip()]
 
               if len(parts) == 2:
                   mm, dd = parts
-                  return f"{fallback_year}/{mm.zfill(2)}/{dd.zfill(2)}"
+                  return f"{fallback_year}-{mm.zfill(2)}-{dd.zfill(2)}"
 
-              return None
+              return ""
+
+          creds = Credentials.from_service_account_file(
+              "service_account.json",
+              scopes=SCOPES
+          )
+
+          gc = gspread.authorize(creds)
+          sh = gc.open(SPREADSHEET_NAME)
 
           rows = []
 
@@ -129,36 +146,55 @@ jobs:
                   record = dict(zip(headers, padded_row))
 
                   pj_name = str(record.get("PJ Name", "")).strip()
-                  role = str(record.get("Role", "")).strip()
-                  category = str(record.get("Category", "")).strip()
+                  role_raw = str(record.get("Role", "")).strip()
+                  category_raw = str(record.get("Category", "")).strip()
                   work_file_raw = str(record.get("Work File", "")).strip()
-                  words_raw = str(record.get("Word Amount", "")).strip()
-                  offered_raw = str(record.get("Offered Date", "")).strip()
-                  start_raw = str(record.get("Start Date", "")).strip()
-                  completion_raw = str(record.get("Completion Date", "")).strip()
+                  words_raw = record.get("Word Amount", "")
+                  offered_raw = record.get("Offered Date", "")
+                  start_raw = record.get("Start Date", "")
+                  completion_raw = record.get("Completion Date", "")
 
                   completion_date = normalize_date(completion_raw, sheet_name)
-                  if not completion_date:
+
+                  if completion_date == "":
                       continue
 
                   offered_date = normalize_date(offered_raw, sheet_name) or completion_date
                   start_date = normalize_date(start_raw, sheet_name) or completion_date
 
-                  work_files = [x.strip() for x in work_file_raw.split("\n") if x.strip()]
+                  work_files = [
+                      x.strip()
+                      for x in work_file_raw.splitlines()
+                      if str(x).strip()
+                  ]
+
+                  work_file_joined = " ".join(work_files) if work_files else ""
 
                   rows.append({
+                      "sheet": sheet_name,
                       "pjName": pj_name,
-                      "role": role,
-                      "category": category,
-                      "workFile": work_file_raw,
+                      "role": ROLE_MAP.get(role_raw, role_raw if role_raw else "Other"),
+                      "roleRaw": role_raw,
+                      "category": category_raw.replace("\n", " ").strip(),
+                      "workFile": work_file_joined,
+                      "workFiles": work_files,
                       "words": clean_int(words_raw),
                       "offeredDate": offered_date,
                       "startDate": start_date,
                       "completionDate": completion_date,
-                      "workFiles": work_files
+                      "sortDate": completion_date
                   })
 
-          rows = sorted(rows, key=lambda x: x["completionDate"], reverse=True)
+          rows = sorted(
+              rows,
+              key=lambda r: (
+                  r.get("sortDate", ""),
+                  r.get("words", 0),
+                  r.get("pjName", "")
+              ),
+              reverse=True
+          )
+
           js_rows = json.dumps(rows, ensure_ascii=False)
 
           with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
