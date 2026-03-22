@@ -6,6 +6,7 @@ on:
     - cron: "0 21 * * *"
 
 jobs:
+
   build:
 
     runs-on: ubuntu-latest
@@ -18,8 +19,7 @@ jobs:
 
     - name: install packages
       run: |
-
-        pip install pandas requests
+        pip install pandas
 
 
     - name: generate html
@@ -28,52 +28,49 @@ jobs:
         python << 'EOF'
 
         import pandas as pd
-        import requests
-        import re
         import json
 
-        SPREADSHEET_ID="1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo"
+        SPREADSHEET_ID = "1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo"
 
-        # ------------------------
-        # get all sheet gids
-        # ------------------------
+        # 2023〜将来分まで自動取得
+        YEARS = range(2023, 2035)
 
-        url=f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}"
+        dfs = []
 
-        html=requests.get(url).text
+        for y in YEARS:
 
-        gids=set(re.findall(r'"gid":(\d+)',html))
-
-        dfs=[]
-
-        for gid in gids:
-
-            csv_url=f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv&gid={gid}"
+            url = f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet={y}"
 
             try:
 
-                df=pd.read_csv(csv_url)
+                df = pd.read_csv(url)
 
-                if len(df)>0:
+                if len(df) > 0:
 
-                    df["sheet"]=gid
+                    df["sheet"] = str(y)
 
                     dfs.append(df)
 
-            except:
+                    print(f"loaded sheet {y}")
 
-                pass
+            except Exception as e:
+
+                print(f"skip {y}")
 
 
-        df=pd.concat(dfs,ignore_index=True)
+        if len(dfs) == 0:
 
-        # ------------------------
-        # normalize columns
-        # ------------------------
+            raise Exception("No sheet data found")
 
-        df.columns=[c.strip() for c in df.columns]
 
-        columns=[
+        df = pd.concat(dfs, ignore_index=True)
+
+
+        # 列名整理
+        df.columns = [c.strip() for c in df.columns]
+
+
+        columns = [
 
             "PJ Name",
             "Role",
@@ -86,31 +83,32 @@ jobs:
 
         ]
 
-        df=df[columns]
+        df = df[columns]
 
-        rows=[]
 
-        for _,r in df.iterrows():
+        rows = []
+
+        for _, r in df.iterrows():
 
             rows.append({
 
-                "pjName":r["PJ Name"],
+                "pjName": r["PJ Name"],
 
-                "role":r["Role"],
+                "role": r["Role"],
 
-                "category":r["Category"],
+                "category": r["Category"],
 
-                "workFile":r["Work File"],
+                "workFile": r["Work File"],
 
-                "words":int(r["Word Amount"]),
+                "words": int(r["Word Amount"]),
 
-                "offeredDate":r["Offered Date"],
+                "offeredDate": r["Offered Date"],
 
-                "startDate":r["Start Date"],
+                "startDate": r["Start Date"],
 
-                "completionDate":r["Completion Date"],
+                "completionDate": r["Completion Date"],
 
-                "workFiles":[
+                "workFiles": [
 
                     x.strip()
 
@@ -121,27 +119,27 @@ jobs:
             })
 
 
-        # ------------------------
-        # inject into template
-        # ------------------------
+        with open("work_record_dashboard_v10.html") as f:
 
-        with open("work_record_dashboard_v10.html","r") as f:
-
-            template=f.read()
+            template = f.read()
 
 
-        html=template.replace(
+        html = template.replace(
 
             "const rows = [];",
 
-            "const rows = "+json.dumps(rows,ensure_ascii=False)+";"
+            "const rows = " + json.dumps(rows, ensure_ascii=False) + ";"
 
         )
 
 
-        with open("index.html","w") as f:
+        with open("index.html", "w") as f:
 
             f.write(html)
+
+
+        print(f"{len(rows)} rows written")
+
 
         EOF
 
