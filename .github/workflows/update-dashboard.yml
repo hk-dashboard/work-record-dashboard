@@ -38,7 +38,6 @@ jobs:
       - name: Update dashboard from Google Sheets
         run: |
           python <<'PY'
-          import os
           import re
           import json
           import gspread
@@ -64,17 +63,23 @@ jobs:
           def clean_int(value):
               if value is None:
                   return 0
+
               s = str(value).strip()
+
               if s == "":
                   return 0
+
               s = s.replace(",", "")
+
               return int(float(s))
 
           all_rows = []
 
           for sheet_name in YEAR_SHEETS:
+
               try:
                   ws = sh.worksheet(sheet_name)
+
               except gspread.exceptions.WorksheetNotFound:
                   continue
 
@@ -98,12 +103,31 @@ jobs:
                   if not date_raw:
                       continue
 
-                  # 年シート名を付与
-                  if "-" in date_raw:
-                      date = date_raw
+
+                  date_clean = date_raw.replace("/", "-")
+
+                  parts = date_clean.split("-")
+
+
+                  if len(parts) == 3:
+
+                      if len(parts[0]) == 4:
+
+                          date = date_clean
+
+                      else:
+
+                          date = f"{parts[2]}-{parts[0].zfill(2)}-{parts[1].zfill(2)}"
+
+
+                  elif len(parts) == 2:
+
+                      date = f"{sheet_name}-{parts[0].zfill(2)}-{parts[1].zfill(2)}"
+
+
                   else:
-                      month_day = date_raw.replace("/", "-").zfill(5)
-                      date = f"{sheet_name}-{month_day}"
+                      continue
+
 
                   category = record.get("Category", "").strip()
                   client = record.get("Client", "").strip()
@@ -112,12 +136,16 @@ jobs:
                   word_amount_raw = record.get("Word Amount", "").strip()
                   note = record.get("Note", "").strip()
 
+
                   try:
                       word_amount = clean_int(word_amount_raw)
+
                   except:
                       word_amount = 0
 
+
                   all_rows.append({
+
                       "date": date,
                       "category": category,
                       "client": client,
@@ -125,16 +153,16 @@ jobs:
                       "work_time": worktime,
                       "word_amount": word_amount,
                       "note": note,
+
                   })
 
-          def sort_key(x):
-              return x.get("date", "")
 
           all_rows = sorted(
               all_rows,
-              key=sort_key,
+              key=lambda x: x["date"],
               reverse=True
           )
+
 
           js_rows = json.dumps(
               all_rows,
@@ -142,27 +170,54 @@ jobs:
               indent=2
           )
 
-          with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
+
+          with open(
+              OUTPUT_FILE,
+              "r",
+              encoding="utf-8"
+          ) as f:
+
               html = f.read()
 
+
+
           new_html, count = re.subn(
+
               r"rows\s*=\s*\[(?:.|\n|\r)*?\]",
+
               f"rows = {js_rows}",
+
               html,
+
               count=1
           )
 
+
           if count == 0:
+
               raise RuntimeError(
-                  "Could not find rows = [] block in HTML file."
+                  "rows = [] が見つかりません"
               )
 
-          with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+
+
+          with open(
+              OUTPUT_FILE,
+              "w",
+              encoding="utf-8"
+          ) as f:
+
               f.write(new_html)
 
-          print(f"Updated {OUTPUT_FILE} with {len(all_rows)} rows.")
+
+
+          print(
+              f"Updated {OUTPUT_FILE} with {len(all_rows)} rows."
+          )
 
           PY
+
+
 
       - name: Commit changes
         run: |
@@ -172,6 +227,8 @@ jobs:
           git add work_record_dashboard_v10.html
 
           git diff --cached --quiet || git commit -m "auto update dashboard"
+
+
 
       - name: Push changes
         run: |
