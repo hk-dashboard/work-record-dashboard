@@ -32,7 +32,6 @@ jobs:
 
         SPREADSHEET_ID = "1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo"
 
-        # 2023〜将来分まで自動取得
         YEARS = range(2023, 2035)
 
         dfs = []
@@ -53,7 +52,7 @@ jobs:
 
                     print(f"loaded sheet {y}")
 
-            except Exception as e:
+            except:
 
                 print(f"skip {y}")
 
@@ -65,8 +64,6 @@ jobs:
 
         df = pd.concat(dfs, ignore_index=True)
 
-
-        # 列名整理
         df.columns = [c.strip() for c in df.columns]
 
 
@@ -90,6 +87,8 @@ jobs:
 
         for _, r in df.iterrows():
 
+            words = int(str(r["Word Amount"]).replace(",",""))
+
             rows.append({
 
                 "pjName": r["PJ Name"],
@@ -100,7 +99,7 @@ jobs:
 
                 "workFile": r["Work File"],
 
-                "words": int(r["Word Amount"]),
+                "words": words,
 
                 "offeredDate": r["Offered Date"],
 
