@@ -3,95 +3,158 @@ name: update dashboard
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 20 * * *"
-
-permissions:
-  contents: write
+    - cron: "0 21 * * *"
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
 
-      - name: install python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: checkout
+      uses: actions/checkout@v4
 
-      - name: install packages
-        run: pip install pandas requests
 
-      - name: generate html
-        run: |
-          python << 'EOF'
-          import json
-          import pandas as pd
+    - name: install packages
+      run: |
 
-          SHEET_URL = "https://docs.google.com/spreadsheets/d/1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo/edit?gid=1629472964#gid=1629472964"
+        pip install pandas requests
 
-          sheet_id = SHEET_URL.split("/d/")[1].split("/")[0]
 
-          if "gid=" in SHEET_URL:
-              gid_part = SHEET_URL.split("gid=")[1]
-              gid = gid_part.split("#")[0].split("&")[0]
-          else:
-              gid = "0"
+    - name: generate html
+      run: |
 
-          csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-          print("CSV URL:", csv_url)
+        python << 'EOF'
 
-          df = pd.read_csv(csv_url)
-          print("columns:", df.columns.tolist())
+        import pandas as pd
+        import requests
+        import re
+        import json
 
-          # 列名をColab版に合わせる
-          df = df.rename(columns={
-              "PJ Name": "pjName",
-              "Role": "role",
-              "Category": "category",
-              "Work File": "workFile",
-              "Word Amount": "words",
-              "Offered Date": "offeredDate",
-              "Start Date": "startDate",
-              "Completion Date": "completionDate",
-          })
+        SPREADSHEET_ID="1mlDbm671wECDDF9RW0-_MN2SVc8pdMm6GTizK6DrBKo"
 
-          # words を数値化
-          df["words"] = (
-              df["words"]
-              .astype(str)
-              .str.replace(",", "", regex=False)
-              .str.strip()
-          )
-          df["words"] = pd.to_numeric(df["words"], errors="coerce").fillna(0)
+        # ------------------------
+        # get all sheet gids
+        # ------------------------
 
-          # workFiles 作成
-          df["workFiles"] = df["workFile"].fillna("").astype(str).apply(
-              lambda x: [f.strip() for f in x.split("\n") if f.strip()]
-          )
+        url=f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}"
 
-          rows_dashboard = df.to_dict(orient="records")
+        html=requests.get(url).text
 
-          rows_json = json.dumps(rows_dashboard, ensure_ascii=False)
-          rows_json = rows_json.replace("\r\n", "\\n").replace("\n", "\\n").replace("\r", "\\n")
+        gids=set(re.findall(r'"gid":(\d+)',html))
 
-          with open("work_record_dashboard_v10.html", "r", encoding="utf-8") as f:
-              template_html = f.read()
+        dfs=[]
 
-          html = template_html.replace("const rows = [];", f"const rows = {rows_json};")
+        for gid in gids:
 
-          with open("index.html", "w", encoding="utf-8") as f:
-              f.write(html)
+            csv_url=f"https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/export?format=csv&gid={gid}"
 
-          print("index.html generated from template")
-          EOF
+            try:
 
-      - name: commit
-        run: |
-          git config user.name github-actions
-          git config user.email actions@github.com
-          git add index.html
-          git commit -m "auto update dashboard" || echo "no changes"
-          git push
+                df=pd.read_csv(csv_url)
+
+                if len(df)>0:
+
+                    df["sheet"]=gid
+
+                    dfs.append(df)
+
+            except:
+
+                pass
+
+
+        df=pd.concat(dfs,ignore_index=True)
+
+        # ------------------------
+        # normalize columns
+        # ------------------------
+
+        df.columns=[c.strip() for c in df.columns]
+
+        columns=[
+
+            "PJ Name",
+            "Role",
+            "Category",
+            "Work File",
+            "Word Amount",
+            "Offered Date",
+            "Start Date",
+            "Completion Date"
+
+        ]
+
+        df=df[columns]
+
+        rows=[]
+
+        for _,r in df.iterrows():
+
+            rows.append({
+
+                "pjName":r["PJ Name"],
+
+                "role":r["Role"],
+
+                "category":r["Category"],
+
+                "workFile":r["Work File"],
+
+                "words":int(r["Word Amount"]),
+
+                "offeredDate":r["Offered Date"],
+
+                "startDate":r["Start Date"],
+
+                "completionDate":r["Completion Date"],
+
+                "workFiles":[
+
+                    x.strip()
+
+                    for x in str(r["Work File"]).split("\n")
+
+                ]
+
+            })
+
+
+        # ------------------------
+        # inject into template
+        # ------------------------
+
+        with open("work_record_dashboard_v10.html","r") as f:
+
+            template=f.read()
+
+
+        html=template.replace(
+
+            "const rows = [];",
+
+            "const rows = "+json.dumps(rows,ensure_ascii=False)+";"
+
+        )
+
+
+        with open("index.html","w") as f:
+
+            f.write(html)
+
+        EOF
+
+
+    - name: commit
+      run: |
+
+        git config user.name github-actions
+
+        git config user.email actions@github.com
+
+        git add index.html
+
+        git commit -m "auto update dashboard" || echo "no changes"
+
+        git push
