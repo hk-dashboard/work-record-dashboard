@@ -36,9 +36,9 @@ body {
 .identity-role { margin-top:4px; color:var(--muted); font-size:clamp(.98rem,1.35vw,1.08rem); font-weight:500; line-height:1.35; }
 
 .identity-contact{
-  margin-top:10px;
+  margin-top:14px;
   display:flex;
-  gap:18px;
+  gap:12px;
   align-items:center;
   flex-wrap:wrap;
   font-size:.92rem;
@@ -47,8 +47,32 @@ body {
 .email-row{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
   flex-wrap:wrap;
+}
+.contact-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  min-height:44px;
+  padding:9px 14px;
+  border-radius:14px;
+  background:rgba(255,255,255,.88);
+  border:1px solid #dbe4ee;
+  box-shadow:0 8px 20px rgba(15,23,42,.04);
+}
+.contact-icon{
+  width:18px;
+  height:18px;
+  color:#475569;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+}
+.contact-icon svg{
+  width:18px;
+  height:18px;
 }
 .email-text{
   color:#334155;
@@ -59,9 +83,9 @@ body {
   border:1px solid #dbe4ee;
   background:#f8fafc;
   color:#475569;
-  width:30px;
-  height:30px;
-  border-radius:8px;
+  width:32px;
+  height:32px;
+  border-radius:10px;
   cursor:pointer;
   display:inline-flex;
   align-items:center;
@@ -110,7 +134,17 @@ body {
   font-weight:700;
 }
 .contact-link:hover{
-  text-decoration:underline;
+  text-decoration:none;
+}
+.linkedin-pill{
+  color:#0f172a;
+}
+.linkedin-pill .contact-icon{
+  color:#0a66c2;
+}
+.linkedin-pill .contact-text{
+  color:#334155;
+  font-weight:700;
 }
 
 .surface {
@@ -119,7 +153,104 @@ body {
   border-radius:28px;
   box-shadow:var(--shadow);
 }
-.hero-card { padding:22px 24px; }
+.hero-card {
+  position:relative;
+  overflow:hidden;
+  padding:26px 24px;
+  display:grid;
+  grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);
+  gap:24px;
+  align-items:center;
+  isolation:isolate;
+}
+.hero-card::before{
+  content:"";
+  position:absolute;
+  inset:-10% -8% auto auto;
+  width:420px;
+  height:240px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(59,130,246,.11), transparent 52%),
+    radial-gradient(circle at 70% 70%, rgba(196,181,253,.10), transparent 48%);
+  pointer-events:none;
+  z-index:-2;
+}
+.hero-card::after{
+  content:"";
+  position:absolute;
+  right:-40px;
+  top:16px;
+  width:360px;
+  height:320px;
+  background-image:radial-gradient(rgba(148,163,184,.18) 1px, transparent 1px);
+  background-size:12px 12px;
+  mask-image:linear-gradient(180deg, rgba(0,0,0,.7), transparent 88%);
+  opacity:.55;
+  pointer-events:none;
+  z-index:-2;
+}
+.hero-main{
+  position:relative;
+  z-index:1;
+}
+.hero-title-wrap{
+  margin-top:18px;
+}
+.hero-aside{
+  position:relative;
+  min-height:180px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-end;
+}
+.hero-aside::before{
+  content:"";
+  position:absolute;
+  inset:auto -36px -36px auto;
+  width:420px;
+  height:220px;
+  border-radius:999px;
+  background:
+    linear-gradient(135deg, rgba(59,130,246,.08), rgba(255,255,255,0) 62%),
+    linear-gradient(180deg, rgba(196,181,253,.10), rgba(255,255,255,0) 72%);
+  transform:rotate(-8deg);
+  pointer-events:none;
+}
+.hero-badges{
+  position:relative;
+  z-index:1;
+  max-width:360px;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  gap:10px;
+  padding-top:12px;
+}
+.hero-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:42px;
+  padding:9px 14px;
+  border-radius:14px;
+  border:1px solid rgba(219,228,238,.9);
+  background:rgba(255,255,255,.72);
+  backdrop-filter:blur(8px);
+  box-shadow:0 12px 30px rgba(15,23,42,.05);
+  color:#334155;
+  font-size:.95rem;
+  font-weight:700;
+  letter-spacing:-.01em;
+}
+.hero-badge.primary{
+  background:linear-gradient(135deg, rgba(96,165,250,.78), rgba(196,181,253,.42));
+  color:#ffffff;
+  border-color:rgba(191,219,254,.92);
+}
+.hero-badge.secondary{
+  background:rgba(226,244,238,.9);
+  color:#285c5a;
+  border-color:rgba(191,229,218,.95);
+}
 h1 { margin:0; font-size:clamp(1.75rem,2.5vw,2.55rem); letter-spacing:-.03em; }
 .button-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
 .year-btn {
@@ -222,6 +353,16 @@ h1 { margin:0; font-size:clamp(1.75rem,2.5vw,2.55rem); letter-spacing:-.03em; }
 }
 
 @media (max-width: 1100px) {
+  .hero-card { grid-template-columns:1fr; }
+  .hero-aside {
+    min-height:auto;
+    justify-content:flex-start;
+  }
+  .hero-badges {
+    justify-content:flex-start;
+    max-width:none;
+    padding-top:0;
+  }
   .kpis, .two-up, .cards { grid-template-columns:1fr 1fr; }
   .two-up { grid-template-columns:1fr; }
 }
@@ -231,6 +372,9 @@ h1 { margin:0; font-size:clamp(1.75rem,2.5vw,2.55rem); letter-spacing:-.03em; }
 .year-select:focus { outline:none; border-color:#94a3b8; box-shadow:0 0 0 4px rgba(148,163,184,.18); }
 @media (max-width: 780px) {
   .container { width:min(100% - 20px, 1320px); }
+  .hero-card { padding:22px 18px; }
+  .hero-badge { width:100%; justify-content:flex-start; }
+  .contact-pill { width:100%; }
   .kpis, .cards { grid-template-columns:1fr; }
   .date-grid { grid-template-columns:1fr; }
   .donut-row { grid-template-columns:1fr; }
@@ -259,27 +403,56 @@ h1 { margin:0; font-size:clamp(1.75rem,2.5vw,2.55rem); letter-spacing:-.03em; }
 <div class="container">
   <div class="hero">
     <div class="surface hero-card">
-      <div class="identity">
-        <div class="identity-name">Hiroshi Kanemitsu</div>
-        <div class="identity-role">Freelance Translator / Linguist</div>
+      <div class="hero-main">
+        <div class="identity">
+          <div class="identity-name">Hiroshi Kanemitsu</div>
+          <div class="identity-role">Freelance Translator / Linguist</div>
 
-        <div class="identity-contact">
-          <div class="email-row">
-            <span class="email-text">✉ kanemitsu.hiroshi@gmail.com</span>
-            <button class="copy-btn" type="button" aria-label="Copy email address" title="Copy email address" onclick="copyEmail(this)">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                <rect x="5" y="5" width="10" height="10" rx="2"></rect>
-              </svg>
-            </button>
-            <span id="copiedBadge" class="copy-badge" aria-live="polite">Copied!</span>
+          <div class="identity-contact">
+            <div class="email-row contact-pill">
+              <span class="contact-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect x="3.5" y="5.5" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.8"></rect>
+                  <path d="M5.5 8l6.5 5 6.5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </span>
+              <span class="email-text">kanemitsu.hiroshi@gmail.com</span>
+              <button class="copy-btn" type="button" aria-label="Copy email address" title="Copy email address" onclick="copyEmail(this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                  <rect x="5" y="5" width="10" height="10" rx="2"></rect>
+                </svg>
+              </button>
+              <span id="copiedBadge" class="copy-badge" aria-live="polite">Copied!</span>
+            </div>
+
+            <a class="contact-link contact-pill linkedin-pill" href="https://www.linkedin.com/in/hiroshi-k-1ba7a03a7" target="_blank" rel="noopener noreferrer">
+              <span class="contact-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6.94 8.5H3.56V20h3.38V8.5Zm-1.69-1.55A1.97 1.97 0 1 0 5.2 3a1.97 1.97 0 0 0 .05 3.95ZM20.44 12.89c0-3.32-1.77-4.86-4.13-4.86-1.9 0-2.76 1.05-3.24 1.79V8.5H9.69c.04.88 0 11.5 0 11.5h3.38v-6.42c0-.34.02-.68.13-.92.27-.68.89-1.38 1.93-1.38 1.36 0 1.9 1.04 1.9 2.57V20h3.38l.03-7.11Z"></path>
+                </svg>
+              </span>
+              <span class="contact-text">LinkedIn</span>
+            </a>
           </div>
-          <a class="contact-link" href="https://www.linkedin.com/in/hiroshi-k-1ba7a03a7" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         </div>
 
+        <div class="hero-title-wrap">
+          <h1>Work Record Dashboard</h1>
+          <div class="year-select-wrap"><label class="year-select-label" for="yearSelect">Year</label><select id="yearSelect" class="year-select"></select></div>
+        </div>
       </div>
-      <h1>Work Record Dashboard</h1>
-      <div class="year-select-wrap"><label class="year-select-label" for="yearSelect">Year</label><select id="yearSelect" class="year-select"></select></div>
+
+      <div class="hero-aside" aria-hidden="true">
+        <div class="hero-badges">
+          <div class="hero-badge primary">English ↔ Japanese</div>
+          <div class="hero-badge secondary">Medical / Healthcare</div>
+          <div class="hero-badge">Translation</div>
+          <div class="hero-badge">MTPE</div>
+          <div class="hero-badge">Proofread</div>
+          <div class="hero-badge">LQA</div>
+        </div>
+      </div>
     </div>
   </div>
 
