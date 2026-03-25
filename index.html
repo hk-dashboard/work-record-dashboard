@@ -344,7 +344,7 @@ h1 { margin:0; font-size:clamp(1.75rem,2.5vw,2.55rem); letter-spacing:-.03em; }
   border:1px solid transparent;
 }
 .role-Translation { background:#eaf2ff; color:#2453b6; border-color:#cfe0ff; }
-.role-Proofreadinging { background:#f2ebff; color:#6d28d9; border-color:#e0d2ff; }
+.role-Proofreading { background:#f2ebff; color:#6d28d9; border-color:#e0d2ff; }
 .role-MTPE { background:#fff3df; color:#b45309; border-color:#fde1b2; }
 .role-LQA { background:#e9f9ef; color:#15803d; border-color:#bde8cc; }
 .role-default { background:#f3f4f6; color:#4b5563; border-color:#e5e7eb; }
@@ -880,7 +880,7 @@ function renderProjects(active) {
   }
 
   wrap.innerHTML = `<div class="cards">${sorted.map((r, idx) => {
-    const roleClass = ["Translation","Proofreadinging","MTPE","LQA"].includes(r.role) ? "role-" + r.role : "role-default";
+    const roleClass = ["Translation","Proofreading","MTPE","LQA"].includes(r.role) ? "role-" + r.role : "role-default";
     const filesCount = (r.workFiles && r.workFiles.length) ? r.workFiles.length : (r.workFile ? 1 : 0);
     return `
       <article class="surface card">
