@@ -119,21 +119,74 @@ body {
 }
 .copy-badge{
   position:absolute;
-  left:calc(100% + 8px);
+  left:calc(100% + 12px);
   top:50%;
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+  min-height:56px;
+  padding:10px 20px 10px 14px;
   margin:0;
-  color:#2563eb;
-  font-size:.82rem;
-  font-weight:700;
+  border-radius:22px;
+  border:1px solid rgba(203,213,225,.95);
+  background:linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
+  box-shadow:
+    0 20px 40px rgba(59,130,246,.16),
+    0 8px 20px rgba(15,23,42,.08);
+  color:#0f172a;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:-.01em;
   opacity:0;
-  transform:translateY(-50%) translateX(-4px);
-  transition:opacity .18s ease, transform .18s ease;
+  transform:translateY(-50%) translateX(-6px) scale(.96);
+  transform-origin:left center;
+  transition:opacity .22s ease, transform .22s ease;
   pointer-events:none;
   white-space:nowrap;
+  z-index:20;
+}
+.copy-badge::before{
+  content:"";
+  width:48px;
+  height:48px;
+  border-radius:999px;
+  flex:0 0 auto;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 38%),
+    linear-gradient(135deg, #67d4c5 0%, #56c6ba 100%);
+  box-shadow:0 10px 22px rgba(86,198,186,.26);
+}
+.copy-badge::after{
+  content:"";
+  position:absolute;
+  left:-10px;
+  top:50%;
+  width:20px;
+  height:20px;
+  background:linear-gradient(135deg, rgba(255,255,255,.98), rgba(248,250,252,.96));
+  border-left:1px solid rgba(203,213,225,.95);
+  border-bottom:1px solid rgba(203,213,225,.95);
+  transform:translateY(-50%) rotate(45deg);
+  border-bottom-left-radius:6px;
+}
+.copy-badge .copy-badge-text{
+  position:relative;
+  z-index:1;
+}
+.copy-badge .copy-badge-check{
+  position:absolute;
+  left:29px;
+  top:50%;
+  width:18px;
+  height:10px;
+  border-left:4px solid #ffffff;
+  border-bottom:4px solid #ffffff;
+  transform:translateY(-62%) rotate(-45deg);
+  z-index:2;
 }
 .copy-badge.show{
   opacity:1;
-  transform:translateY(0);
+  transform:translateY(-50%) translateX(0) scale(1);
 }
 .contact-link{
   color:#2563eb;
@@ -410,7 +463,16 @@ h1 { margin:0; font-size:clamp(1.75rem,2.5vw,2.55rem); letter-spacing:-.03em; }
   .email-row{ flex-wrap:wrap; }
   .copy-badge{
     position:static;
+    left:auto;
+    top:auto;
+    margin-top:8px;
     transform:none;
+  }
+  .copy-badge.show{
+    transform:none;
+  }
+  .copy-badge::after{
+    display:none;
   }
   .container { width:min(100% - 20px, 1320px); }
   .hero-card {
@@ -611,7 +673,7 @@ border-color:#fcd34d;
                   <rect x="5" y="5" width="10" height="10" rx="2"></rect>
                 </svg>
               </button>
-              <span id="copiedBadge" class="copy-badge" aria-live="polite">Copied!</span>
+              <span id="copiedBadge" class="copy-badge" aria-live="polite"><span class="copy-badge-check" aria-hidden="true"></span><span class="copy-badge-text">Copied!</span></span>
             </div>
 
             <a class="contact-link contact-pill linkedin-pill" href="https://www.linkedin.com/in/hiroshi-k-1ba7a03a7" target="_blank" rel="noopener noreferrer">
