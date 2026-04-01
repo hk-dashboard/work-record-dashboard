@@ -778,6 +778,7 @@ function fmtDate(iso) {
 function groupCategory(label) {
   const s = (label || "").trim();
   const low = s.toLowerCase();
+  if (low.startsWith("marketing/public relations")) return "Marketing/Public Relations";
   if (low.includes("clinical trial") || low.includes("clical trial") || low.includes("clinical trials") || low.includes("medical clinical trial")) return "Medical/Clinical Trial";
   if (s === "General" || s === "Genreal" || s === "Marketing") return "General";
   if (low.startsWith("medical")) return "Medical/Other";
@@ -914,7 +915,7 @@ function renderBreakdown(active) {
           ${entries.map((entry, i) => `
             <div class="legend-item">
               <div class="swatch" style="background:${colors[i % colors.length]}"></div>
-              <div class="legend-label">${entry[0] === "Marketing/Public Relations (SIA)" ? "Marketing/Public Relations" : entry[0]}</div>
+              <div class="legend-label">${entry[0]}</div>
               <div class="legend-pct">${pcts[i].toFixed(1)}%</div>
             </div>
           `).join("")}
